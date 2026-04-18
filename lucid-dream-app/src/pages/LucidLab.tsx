@@ -6,11 +6,13 @@
  */
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import RCScheduleSettings from '../components/RCScheduleSettings'
 import RCSchedulePreview from '../components/RCSchedulePreview'
 import { DreamSignsTab } from '../components/DreamSignsTab'
 import WbtbTab from '../components/WbtbTab'
+import PageLayout from '../components/PageLayout'
 import { RCScheduleConfig, RCScheduleEvent, RC_METHODS } from '../types/realityCheck'
 import { rcScheduleService } from '../services/rcSchedule'
 import { icsExport } from '../services/icsExport'
@@ -24,6 +26,7 @@ const tabs: { id: ActiveTab; label: string }[] = [
 ]
 
 export default function LucidLab(): JSX.Element {
+  const navigate = useNavigate()
   const today = format(new Date(), 'yyyy-MM-dd')
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('rc')
@@ -72,12 +75,10 @@ export default function LucidLab(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-surface p-4">
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-heading text-text-primary mb-6 mt-8">Lucid Lab</h1>
-
+    <PageLayout title="Lucid Lab" showBack={true} onBackClick={() => navigate(-1)}>
+      <div className="mx-auto max-w-2xl space-y-4">
         {/* Tab 導覽 */}
-        <div className="flex gap-1 mb-6 border-b border-border-subtle">
+        <div className="flex gap-1 border-b border-border-subtle">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -141,6 +142,6 @@ export default function LucidLab(): JSX.Element {
           {activeTab === 'wbtb' && <WbtbTab />}
         </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }

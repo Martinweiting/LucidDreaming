@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { apiKeyManager } from '../services/apiKey'
 import { backupService } from '../services/backup'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { DriveBackupSection } from '../components/DriveBackupSection'
+import PageLayout from '../components/PageLayout'
 
 type ConfirmAction = null | 'clear-all' | 'import'
 
@@ -11,6 +14,7 @@ interface ImportState {
 }
 
 export default function Settings(): JSX.Element {
+  const navigate = useNavigate()
   // API Key state
   const [apiKey, setApiKey] = useState('')
   const [showSaved, setShowSaved] = useState(false)
@@ -161,13 +165,8 @@ export default function Settings(): JSX.Element {
   }
 
   return (
-    <main className="min-h-dvh flex flex-col bg-bg-primary">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto max-w-md space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="font-serif text-title font-light text-text-primary">設定</h1>
-          </div>
+    <PageLayout title="設定" showBack={true} onBackClick={() => navigate(-1)}>
+      <div className="mx-auto max-w-md space-y-8">
 
           {/* AI Service Section */}
           <section className="space-y-3">
@@ -347,6 +346,9 @@ export default function Settings(): JSX.Element {
             </div>
           </section>
 
+          {/* Google Drive Backup */}
+          <DriveBackupSection />
+
           {/* Danger Zone */}
           <section className="space-y-3">
             <div>
@@ -366,7 +368,6 @@ export default function Settings(): JSX.Element {
               </p>
             </div>
           </section>
-        </div>
       </div>
 
       {/* Confirm Modal */}
@@ -385,6 +386,6 @@ export default function Settings(): JSX.Element {
           }}
         />
       )}
-    </main>
+    </PageLayout>
   )
 }

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { format, subDays } from 'date-fns'
 import { zhTW } from 'date-fns/locale'
 import { dreamRepo } from '../services/dreamRepo'
+import PageLayout from '../components/PageLayout'
 
 const AUTOSAVE_INTERVAL = 3000
 const DRAFT_STORAGE_KEY = 'capture-draft'
@@ -66,10 +67,6 @@ export default function Capture(): JSX.Element {
     }
   }, [content, selectedDate, defaultDate])
 
-  const handleDateClick = () => {
-    dateInputRef.current?.click()
-  }
-
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(e.target.value)
   }
@@ -96,56 +93,53 @@ export default function Capture(): JSX.Element {
     locale: zhTW,
   })
 
+  const rightActions = (
+    <button
+      onClick={handleSave}
+      disabled={!content.trim() || isSubmitting}
+      className="px-3 py-1 rounded-md bg-accent text-small font-medium text-bg-primary transition-colors duration-normal enabled:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {isSubmitting ? '儲存中…' : '儲存'}
+    </button>
+  )
+
   return (
-    <div className="relative flex h-screen w-screen flex-col bg-base">
-      {/* 頂部：日期選擇器 + 還原訊息 */}
-      <div className="border-b border-border-subtle bg-base px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={handleDateClick}
-              className="text-left text-caption text-secondary transition-colors duration-normal hover:text-primary"
-              aria-label="選擇夢境日期"
-            >
-              {displayDate} 的夢
-            </button>
-            {draftRestored && (
-              <p className="text-caption text-tertiary">已還原未儲存內容</p>
-            )}
+    <PageLayout
+      title={displayDate}
+      showBack={true}
+      onBackClick={() => navigate('/home')}
+      rightActions={rightActions}
+      className="!px-0 !py-0"
+    >
+      <div className="flex h-full flex-col">
+        {/* 日期選擇器 + 還原訊息 */}
+        {draftRestored && (
+          <div className="border-b border-border-subtle bg-bg-secondary px-4 py-2">
+            <p className="text-caption text-text-tertiary">已還原未儲存內容</p>
           </div>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={selectedDate}
-            onChange={handleDateChange}
-            className="hidden"
-            aria-hidden="true"
+        )}
+
+        {/* 主要區域：Textarea */}
+        <div className="flex-1 overflow-hidden px-4 py-4">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="記下你還記得的一切，零碎也沒關係…"
+            className="h-full w-full resize-none bg-surface p-4 font-serif text-body text-text-primary placeholder-text-tertiary outline-none transition-colors duration-normal focus:ring-2 focus:ring-border-default"
+            spellCheck="false"
           />
         </div>
-      </div>
 
-      {/* 主要區域：Textarea */}
-      <div className="flex-1 overflow-hidden px-6 py-6">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="記下你還記得的一切，零碎也沒關係…"
-          className="h-full w-full resize-none bg-surface p-4 font-serif text-body text-primary placeholder-tertiary outline-none transition-colors duration-normal focus:ring-2 focus:ring-border-focus"
-          spellCheck="false"
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={selectedDate}
+          onChange={handleDateChange}
+          className="hidden"
+          aria-hidden="true"
         />
       </div>
-
-      {/* 底部：儲存按鈕 */}
-      <div className="border-t border-border-subtle bg-base px-6 py-4">
-        <button
-          onClick={handleSave}
-          disabled={!content.trim() || isSubmitting}
-          className="flex min-h-touch w-full items-center justify-center rounded-md bg-accent px-6 py-3 text-body font-medium text-accent-contrast transition-colors duration-normal enabled:hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting ? '儲存中…' : '儲存'}
-        </button>
-      </div>
-    </div>
+    </PageLayout>
   )
 }

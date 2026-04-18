@@ -13,6 +13,7 @@ import {
 } from '../types/ai';
 import { findSimilarDreams } from '../services/similarity';
 import Section from '../components/Section';
+import PageLayout from '../components/PageLayout';
 import MoodControl from '../components/MoodControl';
 import StarRating from '../components/StarRating';
 import TagChip from '../components/TagChip';
@@ -157,37 +158,36 @@ export default function DreamDetail(): JSX.Element {
 
   if (loading) {
     return (
-      <main className="flex min-h-dvh items-center justify-center">
-        <p className="text-text-secondary">載入中…</p>
-      </main>
+      <PageLayout title="載入中" showBack={true}>
+        <div className="flex items-center justify-center py-12">
+          <p className="text-text-secondary">載入中…</p>
+        </div>
+      </PageLayout>
     );
   }
 
   if (!dream) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4">
-        <p className="text-text-primary">找不到夢境紀錄</p>
-        <button
-          onClick={() => navigate('/home')}
-          className="text-accent transition-colors duration-normal hover:text-accent-hover"
-        >
-          返回首頁
-        </button>
-      </main>
+      <PageLayout title="未找到" showBack={true}>
+        <div className="flex flex-col items-center justify-center gap-4 py-12">
+          <p className="text-text-primary">找不到夢境紀錄</p>
+          <button
+            onClick={() => navigate('/home')}
+            className="text-accent transition-colors duration-normal hover:text-accent-hover"
+          >
+            返回首頁
+          </button>
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <main className="flex min-h-dvh flex-col gap-6 px-4 py-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
-          <button
-            onClick={() => navigate('/home')}
-            className="text-text-secondary transition-colors duration-normal hover:text-text-primary"
-          >
-            ← 返回
-          </button>
-          <input
+    <PageLayout title={dream.dreamDate} showBack={true} onBackClick={() => navigate('/home')}>
+      <div className="flex flex-col gap-6">
+        <header className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-2">
+            <input
             type="date"
             value={dream.dreamDate}
             onChange={(e) => {
@@ -499,6 +499,7 @@ export default function DreamDetail(): JSX.Element {
           </div>
         </div>
       )}
-    </main>
+      </div>
+    </PageLayout>
   );
 }

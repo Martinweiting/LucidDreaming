@@ -6,8 +6,11 @@ import Settings from './pages/Settings';
 import LucidLab from './pages/LucidLab';
 import Explore from './pages/Explore';
 import DesignTokensShowcase from './components/_dev/DesignTokensShowcase';
+import { useAutoBackup } from './hooks/useAutoBackup';
 
 export default function App(): JSX.Element {
+  useAutoBackup();
+
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />

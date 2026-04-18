@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
 import {
   Line,
@@ -12,6 +12,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { dreamRepo } from '../services/dreamRepo';
+import PageLayout from '../components/PageLayout';
 import { Dream } from '../types/dream';
 
 type FilterType = 'all' | 'analyzed' | 'notAnalyzed' | 'lucid' | 'nightmare';
@@ -29,6 +30,7 @@ interface ExploreState {
 const ITEMS_PER_PAGE = 30;
 
 export default function Explore(): JSX.Element {
+  const navigate = useNavigate();
   const [state, setState] = useState<ExploreState>({
     dreams: [],
     searchQuery: '',
@@ -199,13 +201,10 @@ export default function Explore(): JSX.Element {
   const minFreq = Math.min(...topTags.map(([, freq]) => freq), 1);
 
   return (
-    <main className="min-h-screen bg-bg-primary px-4 py-8">
+    <PageLayout title="探索夢境" showBack={true} onBackClick={() => navigate(-1)}>
       <div className="mx-auto max-w-4xl space-y-8">
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="font-serif text-display text-text-primary">探索夢境</h1>
-          <p className="text-body text-text-secondary">搜尋、篩選、發現您的夢境模式</p>
-        </div>
+        {/* 說明文字 */}
+        <p className="text-body text-text-secondary">搜尋、篩選、發現您的夢境模式</p>
 
         {/* Search Bar */}
         <div className="relative">
@@ -410,6 +409,6 @@ export default function Explore(): JSX.Element {
           )}
         </div>
       </div>
-    </main>
+    </PageLayout>
   );
 }
