@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { dreamRepo } from '../services/dreamRepo';
+import { backupService } from '../services/backup';
 import { Dream } from '../types/dream';
 import TagChip from '../components/TagChip';
 
@@ -8,6 +9,7 @@ export default function Home(): JSX.Element {
   const [allDreams, setAllDreams] = useState<Dream[]>([]);
   const [incompleteDreams, setIncompleteDreams] = useState<Dream[]>([]);
   const [loading, setLoading] = useState(true);
+  const [daysSinceExport, setDaysSinceExport] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadDreams() {
@@ -24,6 +26,9 @@ export default function Home(): JSX.Element {
     }
 
     loadDreams();
+
+    const days = backupService.getDaysSinceLastExport();
+    setDaysSinceExport(days);
   }, []);
 
   const recentDreams = allDreams.slice(0, 30);
@@ -56,11 +61,34 @@ export default function Home(): JSX.Element {
     );
   }
 
+  const showBackupReminder = daysSinceExport !== null && daysSinceExport >= 30;
+
   return (
     <main className="flex min-h-dvh flex-col gap-6 px-4 py-6">
+      {showBackupReminder && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-secondary p-3">
+          <p className="text-small text-text-secondary">
+            ⏰ 建議備份你的紀錄（{daysSinceExport} 天未導出）
+          </p>
+          <Link
+            to="/settings"
+            className="flex-shrink-0 text-accent text-small font-medium hover:text-accent-hover transition-colors"
+          >
+            去設定 →
+          </Link>
+        </div>
+      )}
+
       <header className="flex items-center justify-between">
         <h1 className="font-serif text-title font-light text-text-primary">夢境記錄</h1>
         <div className="flex gap-2">
+          <Link
+            to="/explore"
+            className="flex min-h-touch min-w-touch items-center justify-center rounded-md border border-border-subtle bg-bg-secondary text-text-secondary transition-colors duration-normal hover:border-border-default hover:text-text-primary"
+            title="探索"
+          >
+            🔍
+          </Link>
           <Link
             to="/capture"
             className="flex min-h-touch min-w-touch items-center justify-center rounded-md border border-border-subtle bg-bg-secondary text-text-secondary transition-colors duration-normal hover:border-border-default hover:text-text-primary"

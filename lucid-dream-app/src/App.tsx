@@ -4,6 +4,7 @@ import DreamDetail from './pages/DreamDetail';
 import Capture from './pages/Capture';
 import Settings from './pages/Settings';
 import LucidLab from './pages/LucidLab';
+import Explore from './pages/Explore';
 import DesignTokensShowcase from './components/_dev/DesignTokensShowcase';
 
 export default function App(): JSX.Element {
@@ -15,6 +16,7 @@ export default function App(): JSX.Element {
       <Route path="/capture" element={<Capture />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/lab" element={<LucidLab />} />
+      <Route path="/explore" element={<Explore />} />
       <Route path="/dev/tokens" element={<DesignTokensShowcase />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

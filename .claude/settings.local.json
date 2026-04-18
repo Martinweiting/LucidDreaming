@@ -17,7 +17,10 @@
       "Bash(curl -s http://localhost:5173)",
       "Bash(python3)",
       "Bash(pnpm test:run src/services/dreamSigns.test.ts)",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(pkill -f \"npm run dev\")"
     ]
   }
 }

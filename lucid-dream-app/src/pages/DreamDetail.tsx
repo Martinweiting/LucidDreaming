@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { format } from 'date-fns';
 import { dreamRepo } from '../services/dreamRepo';
 import { Dream, DreamUpdate } from '../types/dream';
 import { useAutoSave } from '../hooks/useAutoSave';
@@ -10,6 +11,7 @@ import {
   RateLimitError,
   AnalysisError,
 } from '../types/ai';
+import { findSimilarDreams } from '../services/similarity';
 import Section from '../components/Section';
 import MoodControl from '../components/MoodControl';
 import StarRating from '../components/StarRating';
@@ -27,6 +29,9 @@ export default function DreamDetail(): JSX.Element {
   const [showAddTag, setShowAddTag] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [similarDreams, setSimilarDreams] = useState<
+    { dream: Dream; similarity: number }[]
+  >([]);
 
   const editStateRef = useRef<Partial<Dream>>({});
 
@@ -37,6 +42,13 @@ export default function DreamDetail(): JSX.Element {
         const d = await dreamRepo.get(id);
         setDream(d || null);
         editStateRef.current = d ? { ...d } : {};
+
+        // Load similar dreams
+        if (d) {
+          const allDreams = await dreamRepo.listAll();
+          const similar = findSimilarDreams(d, allDreams, 3, 0.2);
+          setSimilarDreams(similar);
+        }
       } catch (error) {
         console.error('Failed to load dream:', error);
       } finally {
@@ -408,6 +420,36 @@ export default function DreamDetail(): JSX.Element {
           </button>
         )}
       </Section>
+
+      {similarDreams.length > 0 && (
+        <Section title="相似的夢" defaultExpanded>
+          <div className="space-y-3">
+            {similarDreams.map(({ dream: similarDream, similarity }) => (
+              <Link
+                key={similarDream.id}
+                to={`/dreams/${similarDream.id}`}
+                className="block rounded-lg border border-border-subtle bg-bg-secondary p-3 transition-all duration-normal hover:border-border-default hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-small text-text-primary font-medium">
+                      {format(new Date(similarDream.dreamDate), 'yyyy 年 M 月 d 日')}
+                    </h4>
+                    <p className="line-clamp-2 text-small text-text-secondary mt-1">
+                      {similarDream.content}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="inline-block rounded-full bg-accent bg-opacity-20 px-2 py-1 text-small text-accent">
+                      {Math.round(similarity * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title="我的筆記" defaultExpanded={!!dream.userNotes}>
         <textarea

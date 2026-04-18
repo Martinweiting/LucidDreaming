@@ -244,6 +244,34 @@ ICS 輸出固定使用 `TZID=Asia/Taipei`。
 
 bedtime 格式 `HH:MM`，回傳 plan 內所有時間皆為 `HH:MM`。
 
+## 相似度服務
+
+`src/services/similarity.ts`：
+- `findSimilar(dream: Dream, allDreams: Dream[], topN?: number): Dream[]`
+
+採用 tag 集合的 Jaccard 相似度，預設過濾 < 0.2 的結果，預設 topN = 3。
+
+## 備份服務
+
+`src/services/backup.ts`：
+- `exportAllToJson(): Promise<Blob>`
+- `importFromJson(file: File, mode: 'replace' | 'merge'): Promise<ImportResult>`
+- `validateBackup(json: unknown): ValidationResult`
+- `getLastExportTime(): Date | null`
+- `markExported(): void`
+
+備份檔案結構：
+```json
+{
+  "appVersion": "1.0.0",
+  "schemaVersion": 1,
+  "exportedAt": "ISO 8601",
+  "dreams": [...]
+}
+```
+
+匯入前必須呼叫 `validateBackup` 驗證。
+
 ## Clarifying Questions 政策
 
 只有在以下狀況才問我：
