@@ -20,7 +20,8 @@
       "Bash(awk '{print $NF}')",
       "Read(//tmp/**)",
       "Bash(curl -s http://localhost:5173/)",
-      "Bash(pkill -f \"npm run dev\")"
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(npx ecc-agentshield *)"
     ]
   }
 }
