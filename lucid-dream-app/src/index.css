@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    min-height: 100dvh;
+  }
+
+  html {
+    background-color: theme('colors.bg.base');
+    color: theme('colors.text.primary');
+    font-family: theme('fontFamily.ui');
+    font-size: theme('fontSize.body[0]');
+    line-height: theme('lineHeight.normal');
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: theme('colors.bg.base');
+    color: theme('colors.text.primary');
+  }
+
+  ::selection {
+    background-color: theme('colors.accent.muted');
+    color: theme('colors.text.primary');
+  }
+
+  a {
+    color: theme('colors.accent.default');
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: theme('colors.accent.hover');
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: theme('boxShadow.focus');
+    border-radius: theme('borderRadius.sm');
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  /* 內文與長段落預設使用 Noto Serif TC */
+  .prose,
+  article,
+  .text-serif {
+    font-family: theme('fontFamily.serif');
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: theme('fontFamily.serif');
+  }
+  .font-ui {
+    font-family: theme('fontFamily.ui');
+  }
+}

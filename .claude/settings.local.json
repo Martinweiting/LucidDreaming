@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(rm \"Z:/Program Files/ClaudeProject/LucidDreaming/lucid-dream-app/tsconfig.node.json\")",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(npm ls *)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(pnpm tsc *)",
+      "Bash(grep -E \"error|^$\")",
+      "Bash(pnpm build *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(pnpm run *)",
+      "Bash(curl http://localhost:5173 -I)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(python3)",
+      "Bash(pnpm test:run src/services/dreamSigns.test.ts)",
+      "Bash(awk '{print $NF}')"
+    ]
+  }
+}
