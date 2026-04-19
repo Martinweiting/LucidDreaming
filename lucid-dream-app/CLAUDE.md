@@ -272,6 +272,22 @@ bedtime 格式 `HH:MM`，回傳 plan 內所有時間皆為 `HH:MM`。
 
 匯入前必須呼叫 `validateBackup` 驗證。
 
+## Google Drive 備份
+
+`src/services/driveBackup.ts`：
+- `authorize(): Promise<void>`
+- `isAuthorized(): boolean`
+- `backupNow(): Promise<DriveBackupResult>`
+- `listBackups(): Promise<DriveFile[]>`
+- `restoreFromBackup(fileId: string): Promise<void>`
+- `revoke(): Promise<void>`
+
+OAuth scope：`https://www.googleapis.com/auth/drive.file`（只能存取本 app 建立的檔案）
+
+Access token 一小時過期，過期時 service 會丟 `DriveAuthExpiredError`，呼叫端要顯示「請重新授權」。
+
+`src/hooks/useAutoBackup.ts` 在 App mount 時檢查並背景觸發備份，失敗不阻塞。
+
 ## Clarifying Questions 政策
 
 只有在以下狀況才問我：
