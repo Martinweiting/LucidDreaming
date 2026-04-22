@@ -2,14 +2,18 @@ import { apiKeyManager } from './apiKey'
 import {
   AnalysisResult,
   GeminiResponse,
+  QwenResponse,
   MissingApiKeyError,
   InvalidApiKeyError,
   RateLimitError,
-  AnalysisError
+  AnalysisError,
 } from '../types/ai'
 
-const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
-const MODEL_NAME = 'gemini-2.0-flash'
+const GEMINI_MODEL = 'gemini-2.5-pro'
+const GEMINI_API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
+
+const QWEN_API_ENDPOINT = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'
+const QWEN_MODEL = 'qwen-max'
 
 const SYSTEM_INSTRUCTION = `你是一位夢境記錄分析助手。你的任務是針對使用者提供的單一夢境敘述，產出簡短的心理層面觀察與標籤。
 嚴格規則：
@@ -26,100 +30,159 @@ const RESPONSE_SCHEMA = {
   properties: {
     summary: {
       type: 'STRING' as const,
-      description: '一段 50–120 字的中性觀察，聚焦於這個夢可能在處理的情緒主題或關注點。不要列點，用流暢的句子。'
+      description: '一段 50–120 字的中性觀察，聚焦於這個夢可能在處理的情緒主題或關注點。不要列點，用流暢的句子。',
     },
     extractedTags: {
       type: 'ARRAY' as const,
-      items: {
-        type: 'STRING' as const
-      },
-      description: '3 到 8 個從夢境中出現的具體名詞或情緒，扁平單層，不分類別。例如：父親、醫院、迷路、焦慮、飛行'
-    }
+      items: { type: 'STRING' as const },
+      description: '3 到 8 個從夢境中出現的具體名詞或情緒，扁平單層，不分類別。例如：父親、醫院、迷路、焦慮、飛行',
+    },
   },
-  required: ['summary', 'extractedTags']
+  required: ['summary', 'extractedTags'],
 }
 
-export async function analyzeDream(content: string): Promise<AnalysisResult> {
-  const apiKey = apiKeyManager.get()
-  if (!apiKey) {
-    throw new MissingApiKeyError()
-  }
+export function getManualAnalysisPrompt(content: string): string {
+  return `${SYSTEM_INSTRUCTION}
 
+夢境內容：
+"""
+${content}
+"""
+
+請以 JSON 格式輸出，包含以下欄位：
+{
+  "summary": "（50–120 字的中性觀察，用流暢的句子，繁體中文）",
+  "extractedTags": ["標籤1", "標籤2", "標籤3"]
+}`
+}
+
+function parseJsonText(text: string): { summary?: string; extractedTags?: string[] } {
+  const cleaned = text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim()
+  return JSON.parse(cleaned) as { summary?: string; extractedTags?: string[] }
+}
+
+async function analyzeWithGemini(content: string, apiKey: string): Promise<AnalysisResult> {
   const requestBody = {
     systemInstruction: {
-      parts: [{ text: SYSTEM_INSTRUCTION }]
+      parts: [{ text: SYSTEM_INSTRUCTION }],
     },
     contents: [
       {
         parts: [
           {
-            text: `夢境內容：
-"""
-${content}
-"""
-
-請輸出 JSON。`
-          }
-        ]
-      }
+            text: `夢境內容：\n"""\n${content}\n"""\n\n請輸出 JSON。`,
+          },
+        ],
+      },
     ],
     generationConfig: {
       responseMimeType: 'application/json',
-      responseSchema: RESPONSE_SCHEMA
-    }
+      responseSchema: RESPONSE_SCHEMA,
+    },
   }
 
+  const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  })
+
+  if (response.status === 401 || response.status === 403) throw new InvalidApiKeyError()
+  if (response.status === 429) throw new RateLimitError()
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { error?: { message?: string } }
+    throw new AnalysisError(
+      `Gemini API 錯誤 (${response.status}): ${errorData.error?.message ?? '未知錯誤'}`
+    )
+  }
+
+  const data: GeminiResponse = await response.json()
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+  if (!text) throw new AnalysisError('Gemini API 回傳無效的響應格式')
+
+  let parsed: { summary?: string; extractedTags?: string[] }
   try {
-    const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
+    parsed = parseJsonText(text)
+  } catch {
+    throw new AnalysisError('無法解析 Gemini API 的 JSON 響應')
+  }
+
+  if (!parsed.summary || !Array.isArray(parsed.extractedTags)) {
+    throw new AnalysisError('Gemini API 響應缺少必要的欄位')
+  }
+
+  return {
+    summary: parsed.summary,
+    extractedTags: parsed.extractedTags,
+    model: GEMINI_MODEL,
+    analyzedAt: new Date().toISOString(),
+  }
+}
+
+async function analyzeWithQwen(content: string, apiKey: string): Promise<AnalysisResult> {
+  const requestBody = {
+    model: QWEN_MODEL,
+    messages: [
+      { role: 'system', content: SYSTEM_INSTRUCTION },
+      {
+        role: 'user',
+        content: `夢境內容：\n"""\n${content}\n"""\n\n請輸出 JSON，包含 summary 和 extractedTags 欄位。`,
       },
-      body: JSON.stringify(requestBody)
-    })
+    ],
+    response_format: { type: 'json_object' },
+  }
 
-    if (response.status === 401 || response.status === 403) {
-      throw new InvalidApiKeyError()
+  const response = await fetch(QWEN_API_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestBody),
+  })
+
+  if (response.status === 401 || response.status === 403) throw new InvalidApiKeyError()
+  if (response.status === 429) throw new RateLimitError()
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({})) as { message?: string }
+    throw new AnalysisError(
+      `通義千問 API 錯誤 (${response.status}): ${errorData.message ?? '未知錯誤'}`
+    )
+  }
+
+  const data: QwenResponse = await response.json()
+  const text = data.choices?.[0]?.message?.content
+  if (!text) throw new AnalysisError('通義千問 API 回傳無效的響應格式')
+
+  let parsed: { summary?: string; extractedTags?: string[] }
+  try {
+    parsed = parseJsonText(text)
+  } catch {
+    throw new AnalysisError('無法解析通義千問 API 的 JSON 響應')
+  }
+
+  if (!parsed.summary || !Array.isArray(parsed.extractedTags)) {
+    throw new AnalysisError('通義千問 API 響應缺少必要的欄位')
+  }
+
+  return {
+    summary: parsed.summary,
+    extractedTags: parsed.extractedTags,
+    model: QWEN_MODEL,
+    analyzedAt: new Date().toISOString(),
+  }
+}
+
+export async function analyzeDream(content: string): Promise<AnalysisResult> {
+  const provider = apiKeyManager.getProvider()
+  const apiKey = apiKeyManager.get(provider)
+  if (!apiKey) throw new MissingApiKeyError()
+
+  try {
+    if (provider === 'qwen') {
+      return await analyzeWithQwen(content, apiKey)
     }
-
-    if (response.status === 429) {
-      throw new RateLimitError()
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new AnalysisError(
-        `Gemini API 錯誤 (${response.status}): ${errorData.error?.message || '未知錯誤'}`
-      )
-    }
-
-    const data: GeminiResponse = await response.json()
-
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new AnalysisError('Gemini API 回傳無效的響應格式')
-    }
-
-    const responseText = data.candidates[0].content.parts[0].text
-    let parsedResponse: { summary?: string; extractedTags?: string[] }
-
-    try {
-      parsedResponse = JSON.parse(responseText)
-    } catch {
-      throw new AnalysisError('無法解析 Gemini API 的 JSON 響應')
-    }
-
-    if (!parsedResponse.summary || !Array.isArray(parsedResponse.extractedTags)) {
-      throw new AnalysisError('Gemini API 響應缺少必要的欄位')
-    }
-
-    const result: AnalysisResult = {
-      summary: parsedResponse.summary,
-      extractedTags: parsedResponse.extractedTags,
-      model: MODEL_NAME,
-      analyzedAt: new Date().toISOString()
-    }
-
-    return result
+    return await analyzeWithGemini(content, apiKey)
   } catch (error) {
     if (
       error instanceof MissingApiKeyError ||

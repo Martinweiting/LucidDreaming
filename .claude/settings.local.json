@@ -21,7 +21,10 @@
       "Read(//tmp/**)",
       "Bash(curl -s http://localhost:5173/)",
       "Bash(pkill -f \"npm run dev\")",
-      "Bash(npx ecc-agentshield *)"
+      "Bash(npx ecc-agentshield *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "mcp__plugin_claude-mem_mcp-search__smart_outline",
+      "mcp__plugin_ecc_sequential-thinking__sequentialthinking"
     ]
   }
 }

@@ -15,16 +15,24 @@ export interface GeminiResponse {
   }>
 }
 
+export interface QwenResponse {
+  choices: Array<{
+    message: {
+      content: string
+    }
+  }>
+}
+
 export class MissingApiKeyError extends Error {
   constructor() {
-    super('Gemini API key 未設定')
+    super('AI API key 未設定')
     this.name = 'MissingApiKeyError'
   }
 }
 
 export class InvalidApiKeyError extends Error {
   constructor() {
-    super('Gemini API key 無效')
+    super('API key 無效')
     this.name = 'InvalidApiKeyError'
   }
 }

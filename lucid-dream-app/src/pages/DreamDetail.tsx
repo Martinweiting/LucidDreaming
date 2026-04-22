@@ -5,6 +5,7 @@ import { dreamRepo } from '../services/dreamRepo';
 import { Dream, DreamUpdate } from '../types/dream';
 import { useAutoSave } from '../hooks/useAutoSave';
 import { analyzeDream } from '../services/ai';
+import ManualAnalysisModal from '../components/ManualAnalysisModal';
 import {
   MissingApiKeyError,
   InvalidApiKeyError,
@@ -30,6 +31,7 @@ export default function DreamDetail(): JSX.Element {
   const [showAddTag, setShowAddTag] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [showManualModal, setShowManualModal] = useState(false);
   const [similarDreams, setSimilarDreams] = useState<
     { dream: Dream; similarity: number }[]
   >([]);
@@ -376,14 +378,22 @@ export default function DreamDetail(): JSX.Element {
         {analysisError === 'missing-api-key' ? (
           <div className="space-y-3">
             <p className="text-small text-text-secondary">
-              Gemini API key 未設定。請前往設定頁面輸入您的 API key。
+              尚未設定 AI API key。可前往設定頁面輸入，或使用手動分析。
             </p>
-            <Link
-              to="/settings"
-              className="inline-block text-accent text-small underline hover:opacity-80"
-            >
-              前往設定
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/settings"
+                className="text-accent text-small underline hover:opacity-80"
+              >
+                前往設定
+              </Link>
+              <button
+                onClick={() => setShowManualModal(true)}
+                className="text-small text-text-secondary underline transition-colors duration-normal hover:text-text-primary"
+              >
+                手動分析
+              </button>
+            </div>
           </div>
         ) : analysisError ? (
           <div className="space-y-3">
@@ -500,6 +510,13 @@ export default function DreamDetail(): JSX.Element {
         </div>
       )}
       </div>
+
+      {showManualModal && (
+        <ManualAnalysisModal
+          dreamContent={dream.content}
+          onClose={() => setShowManualModal(false)}
+        />
+      )}
     </PageLayout>
   );
 }

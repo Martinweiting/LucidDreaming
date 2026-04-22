@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { apiKeyManager } from '../services/apiKey'
+import { apiKeyManager, AiProvider } from '../services/apiKey'
 import { backupService } from '../services/backup'
 import { ConfirmModal } from '../components/ConfirmModal'
 import { DriveBackupSection } from '../components/DriveBackupSection'
@@ -16,7 +16,9 @@ interface ImportState {
 export default function Settings(): JSX.Element {
   const navigate = useNavigate()
   // API Key state
-  const [apiKey, setApiKey] = useState('')
+  const [selectedProvider, setSelectedProvider] = useState<AiProvider>(apiKeyManager.getProvider())
+  const [geminiKey, setGeminiKey] = useState('')
+  const [qwenKey, setQwenKey] = useState('')
   const [showSaved, setShowSaved] = useState(false)
   const [testingKey, setTestingKey] = useState(false)
   const [testError, setTestError] = useState<string | null>(null)
@@ -35,10 +37,11 @@ export default function Settings(): JSX.Element {
   const [confirmText, setConfirmText] = useState('')
 
   useEffect(() => {
-    const savedKey = apiKeyManager.get()
-    if (savedKey) {
-      setApiKey(savedKey)
-    }
+    const savedGemini = apiKeyManager.get('gemini')
+    if (savedGemini) setGeminiKey(savedGemini)
+    const savedQwen = apiKeyManager.get('qwen')
+    if (savedQwen) setQwenKey(savedQwen)
+    setSelectedProvider(apiKeyManager.getProvider())
 
     const days = backupService.getDaysSinceLastExport()
     setLastExportDays(days)
@@ -46,24 +49,26 @@ export default function Settings(): JSX.Element {
 
   // API Key handlers
   const handleSaveApiKey = (): void => {
-    if (apiKey.trim()) {
-      apiKeyManager.set(apiKey)
+    const key = selectedProvider === 'gemini' ? geminiKey : qwenKey
+    if (key.trim()) {
+      apiKeyManager.set(key, selectedProvider)
+      apiKeyManager.setProvider(selectedProvider)
       setShowSaved(true)
       setTestError(null)
-      setTimeout(() => {
-        setShowSaved(false)
-      }, 2000)
+      setTimeout(() => setShowSaved(false), 2000)
     }
   }
 
   const handleClearApiKey = (): void => {
-    apiKeyManager.clear()
-    setApiKey('')
+    apiKeyManager.clear(selectedProvider)
+    if (selectedProvider === 'gemini') setGeminiKey('')
+    else setQwenKey('')
     setTestError(null)
   }
 
   const handleTestApiKey = async (): Promise<void> => {
-    if (!apiKey.trim()) {
+    const currentKey = selectedProvider === 'gemini' ? geminiKey : qwenKey
+    if (!currentKey.trim()) {
       setTestError('請先輸入 API key')
       return
     }
@@ -72,17 +77,35 @@ export default function Settings(): JSX.Element {
     setTestError(null)
 
     try {
-      // 簡單的驗證：呼叫 AI 服務看是否能連接
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: 'test' }] }],
-        }),
-        signal: AbortSignal.timeout(5000),
-      } as any)
+      let response: Response
+      if (selectedProvider === 'gemini') {
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(currentKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'test' }] }] }),
+            signal: AbortSignal.timeout(5000),
+          } as any
+        )
+      } else {
+        response = await fetch(
+          'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${currentKey}`,
+            },
+            body: JSON.stringify({
+              model: 'qwen-turbo',
+              messages: [{ role: 'user', content: 'test' }],
+              max_tokens: 5,
+            }),
+            signal: AbortSignal.timeout(5000),
+          } as any
+        )
+      }
 
       if (response.status === 401 || response.status === 403) {
         setTestError('API key 無效')
@@ -91,7 +114,7 @@ export default function Settings(): JSX.Element {
       } else {
         setTestError('連接失敗，請檢查網路')
       }
-    } catch (error) {
+    } catch {
       setTestError('測試失敗，請檢查網路連接')
     } finally {
       setTestingKey(false)
@@ -172,10 +195,34 @@ export default function Settings(): JSX.Element {
           <section className="space-y-3">
             <div>
               <h2 className="text-body font-semibold text-text-primary">AI 分析</h2>
-              <p className="text-small text-text-secondary mt-1">Gemini API 設定</p>
+              <p className="text-small text-text-secondary mt-1">選擇 AI 服務並設定 API key</p>
             </div>
 
             <div className="space-y-3 bg-bg-secondary rounded-lg border border-border-subtle p-4">
+              {/* Provider selector */}
+              <div className="flex overflow-hidden rounded-lg border border-border-subtle">
+                <button
+                  onClick={() => setSelectedProvider('gemini')}
+                  className={`flex-1 py-2 text-small font-medium transition-colors duration-normal ${
+                    selectedProvider === 'gemini'
+                      ? 'bg-accent text-bg-primary'
+                      : 'bg-bg-primary text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Gemini
+                </button>
+                <button
+                  onClick={() => setSelectedProvider('qwen')}
+                  className={`flex-1 py-2 text-small font-medium transition-colors duration-normal ${
+                    selectedProvider === 'qwen'
+                      ? 'bg-accent text-bg-primary'
+                      : 'bg-bg-primary text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  通義千問
+                </button>
+              </div>
+
               <div>
                 <label htmlFor="apiKey" className="block text-small font-medium text-text-primary mb-2">
                   API Key
@@ -183,9 +230,17 @@ export default function Settings(): JSX.Element {
                 <input
                   id="apiKey"
                   type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="貼上您的 Gemini API key"
+                  value={selectedProvider === 'gemini' ? geminiKey : qwenKey}
+                  onChange={(e) =>
+                    selectedProvider === 'gemini'
+                      ? setGeminiKey(e.target.value)
+                      : setQwenKey(e.target.value)
+                  }
+                  placeholder={
+                    selectedProvider === 'gemini'
+                      ? '貼上您的 Gemini API key'
+                      : '貼上您的通義千問 API key'
+                  }
                   className="w-full px-3 py-2 bg-bg-primary border border-border-subtle rounded-lg text-body text-text-primary placeholder-text-muted focus:outline-none focus:border-border-default transition-colors duration-normal"
                 />
                 {testError && <p className="text-small text-danger mt-2">{testError}</p>}
@@ -194,14 +249,14 @@ export default function Settings(): JSX.Element {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleTestApiKey}
-                  disabled={testingKey || !apiKey.trim()}
+                  disabled={testingKey || !(selectedProvider === 'gemini' ? geminiKey : qwenKey).trim()}
                   className="px-3 py-2 bg-bg-primary border border-border-subtle rounded-lg text-small font-medium text-text-primary transition-colors duration-normal hover:border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {testingKey ? '測試中…' : '測試'}
                 </button>
                 <button
                   onClick={handleSaveApiKey}
-                  disabled={!apiKey.trim()}
+                  disabled={!(selectedProvider === 'gemini' ? geminiKey : qwenKey).trim()}
                   className="px-3 py-2 bg-accent rounded-lg text-small font-medium text-bg-primary transition-colors duration-normal hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   儲存
@@ -222,14 +277,25 @@ export default function Settings(): JSX.Element {
               <p className="text-caption text-text-muted">
                 API key 僅儲存於本機，不會上傳任何伺服器。
               </p>
-              <a
-                href="https://aistudio.google.com/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-accent text-caption underline hover:opacity-80"
-              >
-                取得免費 API key →
-              </a>
+              {selectedProvider === 'gemini' ? (
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-accent text-caption underline hover:opacity-80"
+                >
+                  取得 Gemini API key →
+                </a>
+              ) : (
+                <a
+                  href="https://dashscope.console.aliyun.com/apiKey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-accent text-caption underline hover:opacity-80"
+                >
+                  取得通義千問 API key →
+                </a>
+              )}
             </div>
           </section>
 
