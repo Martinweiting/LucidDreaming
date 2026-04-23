@@ -3,35 +3,35 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════
-   Light theme — 燕麥紙本（預設）
+   Light theme — 絹紙 (Fine Paper)
    ═══════════════════════════════════════════════════════ */
 :root {
   /* Background */
-  --bg-base:    #EFE9DE;
-  --bg-raised:  #F4EFE5;
-  --bg-surface: #E7DFD0;
-  --bg-overlay: #D8CEBB;
-  --bg-inset:   #DCD2C0;
+  --bg-base:    #F4EFE6;
+  --bg-raised:  #FAF6EE;
+  --bg-surface: #EDE7DA;
+  --bg-overlay: #DDD6C8;
+  --bg-inset:   #D5CDBE;
 
   /* Border */
-  --border-subtle:  #D8CEBB;
-  --border-default: #C4B69E;
-  --border-strong:  #A89780;
-  --border-focus:   #8B6F52;
+  --border-subtle:  #DDD5C5;
+  --border-default: #C8BFAA;
+  --border-strong:  #A89880;
+  --border-focus:   #7A5C38;
 
   /* Text */
-  --text-primary:   #2F2A24;
-  --text-secondary: #6B6258;
-  --text-tertiary:  #8F8678;
-  --text-disabled:  #B8AE9C;
-  --text-inverse:   #F4EFE5;
+  --text-primary:   #28221A;
+  --text-secondary: #5E5242;
+  --text-tertiary:  #8A7A66;
+  --text-disabled:  #B8AC98;
+  --text-inverse:   #FAF6EE;
 
-  /* Accent — 摩卡棕 */
-  --accent-subtle:   #E8DCC8;
-  --accent-muted:    #C4A887;
-  --accent-default:  #8B6F52;
-  --accent-hover:    #75583D;
-  --accent-contrast: #F4EFE5;
+  /* Accent — 深摩卡 (Deep Mocha) */
+  --accent-subtle:   #EDE5D8;
+  --accent-muted:    #C4A87A;
+  --accent-default:  #7A5C38;
+  --accent-hover:    #634A2C;
+  --accent-contrast: #FAF6EE;
 
   /* Semantic */
   --semantic-success:   #5C6E4F;
@@ -41,7 +41,7 @@
   --semantic-nightmare: #6B4A45;
   --semantic-lucid:     #3F4A3C;
 
-  /* Common alpha variants (for inline styles / color-mix references) */
+  /* Alpha variants */
   --accent-alpha-08: color-mix(in srgb, var(--accent-default) 8%, transparent);
   --accent-alpha-10: color-mix(in srgb, var(--accent-default) 10%, transparent);
   --accent-alpha-15: color-mix(in srgb, var(--accent-default) 15%, transparent);
@@ -52,35 +52,35 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   Dark theme — 深可可煙燻
+   Dark theme — 深漆 (Deep Lacquer)
    ═══════════════════════════════════════════════════════ */
 [data-theme='dark'] {
   /* Background */
-  --bg-base:    #1A1410;
-  --bg-raised:  #221A14;
-  --bg-surface: #2A211A;
-  --bg-overlay: #14100C;
-  --bg-inset:   #100C09;
+  --bg-base:    #0E0C09;
+  --bg-raised:  #161210;
+  --bg-surface: #1D1912;
+  --bg-overlay: #0A0804;
+  --bg-inset:   #080604;
 
   /* Border */
-  --border-subtle:  #2E251D;
-  --border-default: #3C3126;
-  --border-strong:  #55463A;
-  --border-focus:   #8B6F52;
+  --border-subtle:  #201B13;
+  --border-default: #2E2518;
+  --border-strong:  #463A26;
+  --border-focus:   #9A7A52;
 
   /* Text */
-  --text-primary:   #E8DFCF;
-  --text-secondary: #A89A84;
-  --text-tertiary:  #786B58;
-  --text-disabled:  #4A4137;
-  --text-inverse:   #1A1410;
+  --text-primary:   #EDE5D3;
+  --text-secondary: #A89068;
+  --text-tertiary:  #6B5A42;
+  --text-disabled:  #3A3020;
+  --text-inverse:   #0E0C09;
 
-  /* Accent — 奶茶 */
-  --accent-subtle:   #2A1F15;
-  --accent-muted:    #5E4A32;
-  --accent-default:  #B89A7A;
-  --accent-hover:    #CBAC8A;
-  --accent-contrast: #1A1410;
+  /* Accent — 金箔 (Gold Leaf) */
+  --accent-subtle:   #1E1608;
+  --accent-muted:    #3C2C10;
+  --accent-default:  #C8A552;
+  --accent-hover:    #DAB860;
+  --accent-contrast: #0E0C09;
 
   /* Semantic */
   --semantic-success:   #7A8F6E;
@@ -89,6 +89,13 @@
   --semantic-info:      #8894A8;
   --semantic-nightmare: #8B5E57;
   --semantic-lucid:     #6E826A;
+
+  /* Alpha variants */
+  --accent-alpha-08: color-mix(in srgb, var(--accent-default) 8%, transparent);
+  --accent-alpha-10: color-mix(in srgb, var(--accent-default) 10%, transparent);
+  --accent-alpha-15: color-mix(in srgb, var(--accent-default) 15%, transparent);
+  --accent-alpha-20: color-mix(in srgb, var(--accent-default) 20%, transparent);
+  --accent-alpha-35: color-mix(in srgb, var(--accent-default) 35%, transparent);
 
   color-scheme: dark;
 }
@@ -128,25 +135,20 @@
   }
 
   a {
-    color: var(--accent-default);
+    color: inherit;
     text-decoration: none;
-  }
-
-  a:hover {
-    color: var(--accent-hover);
   }
 
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-default) 35%, transparent);
-    border-radius: theme('borderRadius.sm');
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-default) 50%, transparent);
+    border-radius: theme('borderRadius.xs');
   }
 
   button {
     font-family: inherit;
   }
 
-  /* 內文與長段落預設使用 Noto Serif TC */
   .prose,
   article,
   .text-serif {
@@ -155,7 +157,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   Ambient texture layer — 紙紋 / 星塵
+   Ambient texture layer — 紙紋 / 漆面
    ═══════════════════════════════════════════════════════ */
 .ambient-layer {
   position: fixed;
@@ -169,24 +171,24 @@
 :root .ambient-layer,
 [data-theme='light'] .ambient-layer {
   background-image:
-    radial-gradient(1px 1px at 12% 8%,  rgba(47, 42, 36, 0.06) 50%, transparent 51%),
-    radial-gradient(1px 1px at 73% 22%, rgba(47, 42, 36, 0.05) 50%, transparent 51%),
-    radial-gradient(1px 1px at 42% 67%, rgba(47, 42, 36, 0.04) 50%, transparent 51%),
-    radial-gradient(1px 1px at 88% 83%, rgba(47, 42, 36, 0.05) 50%, transparent 51%),
-    radial-gradient(1px 1px at 23% 45%, rgba(47, 42, 36, 0.04) 50%, transparent 51%);
+    radial-gradient(1px 1px at 12% 8%,  rgba(40, 34, 26, 0.04) 50%, transparent 51%),
+    radial-gradient(1px 1px at 73% 22%, rgba(40, 34, 26, 0.035) 50%, transparent 51%),
+    radial-gradient(1px 1px at 42% 67%, rgba(40, 34, 26, 0.03) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 83%, rgba(40, 34, 26, 0.04) 50%, transparent 51%),
+    radial-gradient(1px 1px at 23% 45%, rgba(40, 34, 26, 0.03) 50%, transparent 51%);
   background-size: 240px 240px, 300px 300px, 280px 280px, 320px 320px, 260px 260px;
-  opacity: 0.9;
+  opacity: 0.8;
 }
 
-/* Dark: 真實星塵效果 */
+/* Dark: 漆面深光效果 */
 [data-theme='dark'] .ambient-layer {
   background-image:
-    radial-gradient(1.2px 1.2px at 18% 12%, rgba(232, 223, 207, 0.18) 50%, transparent 51%),
-    radial-gradient(1px   1px   at 68% 28%, rgba(232, 223, 207, 0.12) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 42% 71%, rgba(184, 154, 122, 0.15) 50%, transparent 51%),
-    radial-gradient(1px   1px   at 83% 88%, rgba(232, 223, 207, 0.10) 50%, transparent 51%),
-    radial-gradient(1px   1px   at 28% 52%, rgba(232, 223, 207, 0.08) 50%, transparent 51%),
-    radial-gradient(1px   1px   at 56% 14%, rgba(184, 154, 122, 0.14) 50%, transparent 51%);
+    radial-gradient(1px 1px at 18% 12%, rgba(200, 165, 82, 0.06) 50%, transparent 51%),
+    radial-gradient(1px 1px at 68% 28%, rgba(237, 229, 211, 0.04) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 42% 71%, rgba(200, 165, 82, 0.05) 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 88%, rgba(237, 229, 211, 0.03) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 52%, rgba(237, 229, 211, 0.03) 50%, transparent 51%),
+    radial-gradient(1px 1px at 56% 14%, rgba(200, 165, 82, 0.04) 50%, transparent 51%);
   background-size: 400px 400px, 340px 340px, 380px 380px, 420px 420px, 360px 360px, 300px 300px;
 }
 
@@ -215,8 +217,13 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -228,6 +235,13 @@
   }
   .font-ui {
     font-family: theme('fontFamily.ui');
+  }
+
+  /* 英雄大數字 — 響應式超大字級 */
+  .text-hero {
+    font-size: clamp(3.5rem, 7vw + 1rem, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
   }
 
   /* Line clamp helpers */
@@ -244,9 +258,12 @@
     overflow: hidden;
   }
 
-  /* Animate utility */
+  /* Animate utilities */
   .animate-fade-in {
-    animation: fade-in 240ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation: fade-in 300ms cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .animate-slide-in {
+    animation: slide-in 240ms cubic-bezier(0.2, 0, 0, 1) both;
   }
   .animate-pulse-dot {
     animation: pulse-dot 2s ease-in-out infinite;
@@ -254,12 +271,15 @@
   .animate-ripple {
     animation: ripple 1.6s ease-out infinite;
   }
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
    Scrollbar styling
    ═══════════════════════════════════════════════════════ */
-::-webkit-scrollbar              { width: 10px; height: 10px; }
+::-webkit-scrollbar              { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track        { background: transparent; }
-::-webkit-scrollbar-thumb        { background: var(--border-subtle); border-radius: 10px; }
+::-webkit-scrollbar-thumb        { background: var(--border-subtle); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover  { background: var(--border-default); }

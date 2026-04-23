@@ -17,22 +17,24 @@ export default function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-small font-ui transition-all duration-fast ${
-        active
-          ? 'bg-accent-default text-bg-base'
-          : 'border border-border-subtle bg-surface text-secondary hover:border-border-default hover:text-primary active:bg-inset'
+      className={`relative inline-flex items-center gap-2 px-4 py-2 font-ui text-small tracking-wide transition-colors duration-fast outline-none focus-visible:ring-1 focus-visible:ring-border-focus ${
+        active ? 'text-primary' : 'text-tertiary hover:text-secondary'
       } ${className}`}
     >
       <span>{label}</span>
+
       {count !== undefined && count > 0 && (
-        <span
-          className={`rounded-full px-1 text-caption tabular-nums ${
-            active ? 'bg-bg-base/20 text-bg-base' : 'text-tertiary'
-          }`}
-        >
+        <span className="font-ui text-caption text-disabled tabular-nums">
           {count}
         </span>
       )}
+
+      {/* 底線指示器 */}
+      <span
+        className={`absolute bottom-0 left-3 right-3 h-px transition-all duration-normal ${
+          active ? 'bg-accent-default' : 'bg-transparent'
+        }`}
+      />
     </button>
   );
 }

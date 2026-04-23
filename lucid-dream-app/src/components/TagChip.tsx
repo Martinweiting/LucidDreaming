@@ -20,16 +20,17 @@ export default function TagChip({
   onClick,
   className = '',
 }: TagChipProps): JSX.Element {
-  const sizeClass =
-    size === 'sm'
-      ? 'text-caption px-2 py-0.5 gap-1'
-      : 'text-small px-3 py-1 gap-1.5';
+  const sizeClass = size === 'sm' ? 'text-caption gap-1' : 'text-small gap-1';
 
   const variantClass: Record<TagVariant, string> = {
-    quiet: 'border border-border-subtle text-tertiary rounded-sm',
-    solid: 'bg-accent-muted text-accent border border-accent-subtle rounded-sm',
-    underline: 'border-b border-border-default text-secondary',
-    ghost: 'text-secondary hover:text-primary',
+    /* 純文字，幾乎隱形 */
+    quiet: 'text-disabled',
+    /* 微底色，accent 文字 */
+    solid: 'bg-accent-subtle text-accent px-2 py-1 rounded-xs',
+    /* 底線版 */
+    underline: 'border-b border-border-subtle text-tertiary pb-px',
+    /* 完全透明 */
+    ghost: 'text-tertiary hover:text-secondary',
   };
 
   const isInteractive = !!onClick;
@@ -47,7 +48,9 @@ export default function TagChip({
       tabIndex={isInteractive ? 0 : undefined}
       onClick={isInteractive ? onClick : undefined}
       onKeyDown={handleKeyDown}
-      className={`inline-flex items-center font-ui transition-colors duration-fast ${sizeClass} ${variantClass[variant]} ${isInteractive ? 'cursor-pointer select-none' : ''} ${className}`}
+      className={`inline-flex items-center font-ui tracking-wide transition-colors duration-fast ${sizeClass} ${variantClass[variant]} ${
+        isInteractive ? 'cursor-pointer select-none' : ''
+      } ${className}`}
     >
       <span>#{tag}</span>
       {onRemove && (
@@ -57,10 +60,10 @@ export default function TagChip({
             e.stopPropagation();
             onRemove();
           }}
-          className="flex items-center justify-center opacity-50 transition-opacity hover:opacity-100"
+          className="flex items-center justify-center opacity-40 transition-opacity hover:opacity-80"
           aria-label={`移除 ${tag}`}
         >
-          <Icon name="close" size={10} strokeWidth={2} />
+          <Icon name="close" size={10} strokeWidth={1.5} />
         </button>
       )}
     </span>

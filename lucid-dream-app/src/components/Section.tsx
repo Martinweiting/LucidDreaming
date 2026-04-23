@@ -1,4 +1,5 @@
 import { ReactNode, useState } from 'react';
+import Icon from './ui/Icon';
 
 interface SectionProps {
   title: string;
@@ -16,29 +17,37 @@ export default function Section({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <section className="border border-border-subtle rounded-lg bg-bg-secondary overflow-hidden">
+    <section className="border-t border-border-subtle">
       <button
         onClick={() => collapsible && setIsExpanded(!isExpanded)}
         disabled={!collapsible}
-        className={`
-          w-full px-4 py-3 flex items-center justify-between gap-2
-          text-text-primary text-body font-medium
-          ${collapsible ? 'cursor-pointer hover:bg-surface transition-colors duration-normal' : ''}
-          ${!collapsible ? 'cursor-default' : ''}
-        `}
+        type="button"
+        className={`w-full flex items-center justify-between py-4 text-left outline-none focus-visible:ring-1 focus-visible:ring-border-focus ${
+          collapsible
+            ? 'cursor-pointer transition-colors duration-fast hover:text-secondary'
+            : 'cursor-default'
+        }`}
       >
-        <span>{title}</span>
+        <span className="font-ui text-caption tracking-ultra text-tertiary uppercase">
+          {title}
+        </span>
         {collapsible && (
-          <span
-            className={`text-text-secondary transition-transform duration-normal ${
-              isExpanded ? 'rotate-180' : ''
+          <Icon
+            name="arrowRight"
+            size={14}
+            strokeWidth={1.25}
+            className={`text-disabled transition-transform duration-normal flex-shrink-0 ${
+              isExpanded ? 'rotate-90' : ''
             }`}
-          >
-            ▼
-          </span>
+          />
         )}
       </button>
-      {isExpanded && <div className="px-4 pb-4 space-y-4">{children}</div>}
+
+      {isExpanded && (
+        <div className="pb-6 space-y-4">
+          {children}
+        </div>
+      )}
     </section>
   );
 }

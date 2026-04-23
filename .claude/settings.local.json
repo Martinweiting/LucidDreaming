@@ -24,7 +24,13 @@
       "Bash(npx ecc-agentshield *)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "mcp__plugin_claude-mem_mcp-search__smart_outline",
-      "mcp__plugin_ecc_sequential-thinking__sequentialthinking"
+      "mcp__plugin_ecc_sequential-thinking__sequentialthinking",
+      "Bash(rm -rf ~/.claude/skills)",
+      "Bash(find ~/.claude/plugins/cache -type d -name \"skills\" -exec rm -rf {} +)",
+      "Bash(find ~/.claude/plugins/marketplaces -type d -name \"skills\" -exec rm -rf {} +)",
+      "Bash(rm -rf ~/.claude/plugins/cache)",
+      "Bash(find ~/.claude/plugins/marketplaces -maxdepth 2 -type d ! -name \"marketplaces\" ! -name \"plugins\" -exec rm -rf {} +)",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }
