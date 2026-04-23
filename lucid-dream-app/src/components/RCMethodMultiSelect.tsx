@@ -29,7 +29,7 @@ export default function RCMethodMultiSelect({ selected, onChange }: RCMethodMult
             key={method}
             tag={method}
             onClick={() => handleToggle(method)}
-            variant={selected.includes(method) ? 'filled' : 'outline'}
+            variant={selected.includes(method) ? 'solid' : 'quiet'}
           />
         ))}
       </div>

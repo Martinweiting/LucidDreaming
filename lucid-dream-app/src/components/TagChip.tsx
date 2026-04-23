@@ -1,42 +1,68 @@
+import Icon from './ui/Icon';
+
+export type TagVariant = 'quiet' | 'solid' | 'underline' | 'ghost';
+export type TagSize = 'sm' | 'md';
+
 interface TagChipProps {
   tag: string;
+  variant?: TagVariant;
+  size?: TagSize;
   onRemove?: () => void;
   onClick?: () => void;
-  variant?: 'filled' | 'outline' | 'dashed';
+  className?: string;
 }
 
 export default function TagChip({
   tag,
+  variant = 'quiet',
+  size = 'sm',
   onRemove,
   onClick,
-  variant = 'filled',
+  className = '',
 }: TagChipProps): JSX.Element {
-  const baseClass = 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-small transition-all duration-normal';
+  const sizeClass =
+    size === 'sm'
+      ? 'text-caption px-2 py-0.5 gap-1'
+      : 'text-small px-3 py-1 gap-1.5';
 
-  const variantClass = {
-    filled: 'bg-accent text-bg-primary',
-    outline: 'border border-border-default bg-bg-secondary text-text-primary',
-    dashed: 'border border-dashed border-border-default bg-bg-secondary text-text-secondary hover:border-border-subtle hover:text-text-primary',
-  }[variant];
+  const variantClass: Record<TagVariant, string> = {
+    quiet: 'border border-border-subtle text-tertiary rounded-sm',
+    solid: 'bg-accent-muted text-accent border border-accent-subtle rounded-sm',
+    underline: 'border-b border-border-default text-secondary',
+    ghost: 'text-secondary hover:text-primary',
+  };
+
+  const isInteractive = !!onClick;
+
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
 
   return (
-    <div
-      className={`${baseClass} ${variantClass} ${onClick ? 'cursor-pointer hover:shadow-sm' : ''}`}
-      onClick={onClick}
+    <span
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onClick={isInteractive ? onClick : undefined}
+      onKeyDown={handleKeyDown}
+      className={`inline-flex items-center font-ui transition-colors duration-fast ${sizeClass} ${variantClass[variant]} ${isInteractive ? 'cursor-pointer select-none' : ''} ${className}`}
     >
-      <span>{tag}</span>
+      <span>#{tag}</span>
       {onRemove && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
-          className="ml-1 flex h-4 w-4 items-center justify-center rounded-full hover:opacity-70 transition-opacity"
+          className="flex items-center justify-center opacity-50 transition-opacity hover:opacity-100"
           aria-label={`移除 ${tag}`}
         >
-          ✕
+          <Icon name="close" size={10} strokeWidth={2} />
         </button>
       )}
-    </div>
+    </span>
   );
 }

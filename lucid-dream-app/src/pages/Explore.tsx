@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
 import {
   Line,
@@ -7,407 +7,350 @@ import {
   XAxis,
   YAxis,
   ComposedChart,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
 import { dreamRepo } from '../services/dreamRepo';
 import PageLayout from '../components/PageLayout';
+import DreamEntry from '../components/ui/DreamEntry';
+import FilterPill from '../components/ui/FilterPill';
+import SectionLabel from '../components/ui/SectionLabel';
+import IconButton from '../components/ui/IconButton';
 import { Dream } from '../types/dream';
 
 type FilterType = 'all' | 'analyzed' | 'notAnalyzed' | 'lucid' | 'nightmare';
 
-interface ExploreState {
-  dreams: Dream[];
-  searchQuery: string;
-  selectedTags: Set<string>;
-  selectedFilter: FilterType;
-  displayedDreams: Dream[];
-  isLoadingMore: boolean;
-  hasMore: boolean;
-}
+const FILTER_LABELS: Record<FilterType, string> = {
+  all: '全部',
+  analyzed: '已分析',
+  notAnalyzed: '未分析',
+  lucid: '清明夢',
+  nightmare: '夢魘',
+};
 
 const ITEMS_PER_PAGE = 30;
 
 export default function Explore(): JSX.Element {
   const navigate = useNavigate();
-  const [state, setState] = useState<ExploreState>({
-    dreams: [],
-    searchQuery: '',
-    selectedTags: new Set(),
-    selectedFilter: 'all',
-    displayedDreams: [],
-    isLoadingMore: false,
-    hasMore: true,
-  });
-
+  const [dreams, setDreams] = useState<Dream[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  const observerRef = useRef<IntersectionObserver>();
-  const endOfListRef = useRef<HTMLDivElement>(null);
   const [tagFrequency, setTagFrequency] = useState<Record<string, number>>({});
+  const [showSearch, setShowSearch] = useState(false);
   const [moodData, setMoodData] = useState<
     Array<{ date: string; mood: number | null; lucidity: number | null }>
   >([]);
 
-  // Load dreams on mount
-  useEffect(() => {
-    async function loadDreams() {
-      const allDreams = await dreamRepo.listAll();
-      setState((prev) => ({
-        ...prev,
-        dreams: allDreams.sort(
-          (a, b) => new Date(b.dreamDate).getTime() - new Date(a.dreamDate).getTime()
-        ),
-      }));
+  const endOfListRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-      // Calculate tag frequency
+  // 載入資料
+  useEffect(() => {
+    async function loadDreams(): Promise<void> {
+      const allDreams = await dreamRepo.listAll();
+      const sorted = [...allDreams].sort(
+        (a, b) => new Date(b.dreamDate).getTime() - new Date(a.dreamDate).getTime(),
+      );
+      setDreams(sorted);
+
+      // 標籤頻率
       const freq: Record<string, number> = {};
-      allDreams.forEach((dream) => {
-        dream.tags.forEach((tag) => {
-          freq[tag] = (freq[tag] || 0) + 1;
-        });
-      });
+      for (const dream of allDreams) {
+        for (const tag of dream.tags) {
+          freq[tag] = (freq[tag] ?? 0) + 1;
+        }
+      }
       setTagFrequency(freq);
 
-      // Generate 90-day mood data
+      // 90 天情緒圖表資料
       const today = new Date();
       const moodByDate: Record<string, { mood: number | null; lucidity: number | null }> = {};
-
       for (let i = 89; i >= 0; i--) {
-        const date = subDays(today, i);
-        const dateStr = format(date, 'yyyy-MM-dd');
+        const dateStr = format(subDays(today, i), 'yyyy-MM-dd');
         moodByDate[dateStr] = { mood: null, lucidity: null };
       }
-
-      allDreams.forEach((dream) => {
-        const entry = moodByDate[dream.dreamDate];
-        if (entry) {
-          entry.mood = dream.mood;
-          entry.lucidity = dream.lucidity;
+      for (const dream of allDreams) {
+        if (moodByDate[dream.dreamDate]) {
+          moodByDate[dream.dreamDate] = { mood: dream.mood, lucidity: dream.lucidity };
         }
-      });
-
-      const chartData = Object.entries(moodByDate).map(([date, { mood, lucidity }]) => ({
-        date,
-        mood,
-        lucidity,
-      }));
-      setMoodData(chartData);
+      }
+      setMoodData(
+        Object.entries(moodByDate).map(([date, vals]) => ({ date, ...vals })),
+      );
     }
 
-    loadDreams();
+    void loadDreams();
   }, []);
 
-  // Filter and search dreams
-  useEffect(() => {
-    let filtered = state.dreams;
-
-    // Apply search filter
-    if (state.searchQuery.trim()) {
-      const query = state.searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (dream) =>
-          dream.content.toLowerCase().includes(query) ||
-          dream.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          dream.userNotes?.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply tag filter
-    if (state.selectedTags.size > 0) {
-      filtered = filtered.filter((dream) =>
-        [...state.selectedTags].some((tag) => dream.tags.includes(tag))
-      );
-    }
-
-    // Apply type filter
-    switch (state.selectedFilter) {
-      case 'analyzed':
-        filtered = filtered.filter((dream) => dream.ai !== null);
-        break;
-      case 'notAnalyzed':
-        filtered = filtered.filter((dream) => dream.ai === null);
-        break;
-      case 'lucid':
-        filtered = filtered.filter((dream) => dream.lucidity !== null && dream.lucidity > 0);
-        break;
-      case 'nightmare':
-        filtered = filtered.filter((dream) => dream.isNightmare);
-        break;
-    }
-
-    setState((prev) => ({
-      ...prev,
-      displayedDreams: filtered.slice(0, displayCount),
-      hasMore: filtered.length > displayCount,
-    }));
-  }, [state.dreams, state.searchQuery, state.selectedTags, state.selectedFilter, displayCount]);
-
-  // Search debounce
-  const handleSearch = (query: string) => {
-    setState((prev) => ({ ...prev, searchQuery: query }));
-    setDisplayCount(ITEMS_PER_PAGE);
-
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-  };
-
-  // Tag toggle
-  const toggleTag = (tag: string) => {
-    setState((prev) => {
-      const newTags = new Set(prev.selectedTags);
-      if (newTags.has(tag)) {
-        newTags.delete(tag);
-      } else {
-        newTags.add(tag);
-      }
-      return { ...prev, selectedTags: newTags };
-    });
-    setDisplayCount(ITEMS_PER_PAGE);
-  };
-
-  // Filter change
-  const handleFilterChange = (filter: FilterType) => {
-    setState((prev) => ({ ...prev, selectedFilter: filter }));
-    setDisplayCount(ITEMS_PER_PAGE);
-  };
-
-  // Infinite scroll observer
+  // 無限捲動（只在掛載時設定一次，callback 用 functional update 避免 stale closure）
   useEffect(() => {
     if (!endOfListRef.current) return;
 
     observerRef.current = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-      if (entry && entry.isIntersecting && state.hasMore && !state.isLoadingMore) {
+      if (entries[0]?.isIntersecting) {
         setDisplayCount((prev) => prev + ITEMS_PER_PAGE);
       }
     });
-
     observerRef.current.observe(endOfListRef.current);
 
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [state.hasMore, state.isLoadingMore]);
+    return () => observerRef.current?.disconnect();
+  }, []);
 
-  // Get top 30 tags
+  // 搜尋顯示後自動 focus
+  useEffect(() => {
+    if (showSearch) {
+      searchInputRef.current?.focus();
+    }
+  }, [showSearch]);
+
+  // 過濾邏輯（純計算，不是 hook）
+  const filteredDreams = (() => {
+    let result = dreams;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.content.toLowerCase().includes(q) ||
+          d.tags.some((t) => t.toLowerCase().includes(q)) ||
+          (d.userNotes ?? '').toLowerCase().includes(q),
+      );
+    }
+    if (selectedTags.size > 0) {
+      result = result.filter((d) =>
+        [...selectedTags].some((t) => d.tags.includes(t)),
+      );
+    }
+    switch (selectedFilter) {
+      case 'analyzed':
+        result = result.filter((d) => d.ai !== null);
+        break;
+      case 'notAnalyzed':
+        result = result.filter((d) => d.ai === null);
+        break;
+      case 'lucid':
+        result = result.filter((d) => d.lucidity !== null && d.lucidity > 0);
+        break;
+      case 'nightmare':
+        result = result.filter((d) => d.isNightmare);
+        break;
+    }
+    return result;
+  })();
+
+  const visibleDreams = filteredDreams.slice(0, displayCount);
+  const hasMore = filteredDreams.length > displayCount;
+
   const topTags = Object.entries(tagFrequency)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 30);
 
-  const maxFreq = Math.max(...topTags.map(([, freq]) => freq), 1);
-  const minFreq = Math.min(...topTags.map(([, freq]) => freq), 1);
+  const maxFreq = Math.max(...topTags.map(([, f]) => f), 1);
+  const minFreq = Math.min(...topTags.map(([, f]) => f), 1);
+
+  const toggleTag = (tag: string): void => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+    setDisplayCount(ITEMS_PER_PAGE);
+  };
+
+  const rightActions = (
+    <IconButton
+      icon="search"
+      label="搜尋"
+      onClick={() => setShowSearch((v) => !v)}
+      active={showSearch || searchQuery.length > 0}
+      size="md"
+    />
+  );
 
   return (
-    <PageLayout title="探索夢境" showBack={true} onBackClick={() => navigate(-1)}>
-      <div className="mx-auto max-w-4xl space-y-8">
-        {/* 說明文字 */}
-        <p className="text-body text-text-secondary">搜尋、篩選、發現您的夢境模式</p>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="搜尋夢境內容…"
-            value={state.searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full rounded-lg border border-border-subtle bg-surface px-4 py-3 text-text-primary placeholder-text-muted transition-colors focus:border-border-default focus:outline-none focus:ring-2 focus:ring-accent-default focus:ring-opacity-20"
-          />
-          <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary">
-            🔍
-          </div>
-        </div>
-
-        {/* Filter Controls */}
-        <div className="flex flex-wrap gap-2">
-          {(['all', 'analyzed', 'notAnalyzed', 'lucid', 'nightmare'] as FilterType[]).map(
-            (filter) => (
+    <PageLayout title="探索" showTabBar rightActions={rightActions}>
+      <div className="px-5 pt-4 pb-2 space-y-7">
+        {/* 搜尋列 */}
+        {showSearch && (
+          <div className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="搜尋夢境內容、標籤…"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setDisplayCount(ITEMS_PER_PAGE);
+              }}
+              className="w-full border-b border-border-default bg-transparent pb-2 font-ui text-body text-primary placeholder-text-disabled outline-none focus:border-border-focus"
+            />
+            {searchQuery && (
               <button
-                key={filter}
-                onClick={() => handleFilterChange(filter)}
-                className={`rounded-full px-4 py-2 text-small transition-all duration-normal ${
-                  state.selectedFilter === filter
-                    ? 'bg-accent-default text-accent-contrast'
-                    : 'border border-border-subtle bg-surface text-text-secondary hover:border-border-default'
-                }`}
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setDisplayCount(ITEMS_PER_PAGE);
+                }}
+                className="absolute right-0 top-0 font-ui text-small text-tertiary hover:text-secondary"
               >
-                {filter === 'all' && '全部'}
-                {filter === 'analyzed' && '已分析'}
-                {filter === 'notAnalyzed' && '未分析'}
-                {filter === 'lucid' && '清明夢'}
-                {filter === 'nightmare' && '惡夢'}
+                清除
               </button>
-            )
-          )}
+            )}
+          </div>
+        )}
+
+        {/* 篩選器 */}
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(FILTER_LABELS) as FilterType[]).map((filter) => (
+            <FilterPill
+              key={filter}
+              label={FILTER_LABELS[filter]}
+              active={selectedFilter === filter}
+              onClick={() => {
+                setSelectedFilter(filter);
+                setDisplayCount(ITEMS_PER_PAGE);
+              }}
+            />
+          ))}
         </div>
 
-        {/* 90-Day Mood Chart */}
-        {moodData.length > 0 && (
-          <div className="space-y-3 rounded-lg border border-border-subtle bg-surface p-6">
-            <h2 className="font-serif text-title text-text-primary">90 天情緒趨勢</h2>
-            <div className="h-64 w-full">
+        {/* 90 天趨勢圖 */}
+        {moodData.some((d) => d.mood !== null) && (
+          <section>
+            <SectionLabel className="mb-4">90 天情緒趨勢</SectionLabel>
+            <div className="h-44 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={moodData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.05)"
-                    vertical={false}
-                  />
+                <ComposedChart data={moodData} margin={{ top: 0, right: 0, bottom: 0, left: -28 }}>
                   <XAxis
                     dataKey="date"
-                    tick={{ fontSize: 12, fill: '#A9A498' }}
-                    tickFormatter={(date) => format(new Date(date), 'MM/dd')}
-                    interval={Math.floor(moodData.length / 6)}
+                    tick={{ fontSize: 10, fill: 'var(--text-disabled)' }}
+                    tickFormatter={(d: string) => format(new Date(d), 'MM/dd')}
+                    interval={Math.floor(moodData.length / 5)}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis
                     yAxisId="left"
                     domain={[-2, 2]}
-                    tick={{ fontSize: 12, fill: '#A9A498' }}
+                    tick={{ fontSize: 10, fill: 'var(--text-disabled)' }}
+                    axisLine={false}
+                    tickLine={false}
                   />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
                     domain={[0, 10]}
-                    tick={{ fontSize: 12, fill: '#A9A498' }}
+                    tick={{ fontSize: 10, fill: 'var(--text-disabled)' }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={24}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#11151F',
-                      border: '1px solid #262C3D',
-                      borderRadius: '6px',
+                      backgroundColor: 'var(--bg-raised)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '4px',
+                      fontSize: '12px',
                     }}
-                    labelStyle={{ color: '#E8E3D5' }}
+                    labelStyle={{ color: 'var(--text-tertiary)' }}
+                    itemStyle={{ color: 'var(--text-secondary)' }}
                   />
-                  <Bar yAxisId="right" dataKey="lucidity" fill="#C49A5E" opacity={0.3} />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="lucidity"
+                    fill="var(--accent-default)"
+                    opacity={0.2}
+                    radius={[2, 2, 0, 0]}
+                  />
                   <Line
                     yAxisId="left"
                     type="monotone"
                     dataKey="mood"
-                    stroke="#C49A5E"
-                    strokeWidth={2}
+                    stroke="var(--accent-default)"
+                    strokeWidth={1.5}
                     dot={false}
                     connectNulls={false}
                   />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-caption text-text-tertiary">
-              情緒變化（左軸）與清明度（右軸柱狀）
+            <p className="mt-1 font-ui text-caption text-disabled">
+              情緒（折線）· 清明度（柱狀）
             </p>
-          </div>
+          </section>
         )}
 
-        {/* Tag Cloud */}
+        {/* 標籤雲 */}
         {topTags.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="font-serif text-title text-text-primary">標籤雲</h2>
-            <div className="flex flex-wrap gap-3">
+          <section>
+            <SectionLabel className="mb-3">標籤</SectionLabel>
+            <div className="flex flex-wrap gap-x-3 gap-y-2">
               {topTags.map(([tag, freq]) => {
-                const scale = minFreq === maxFreq ? 1 : (freq - minFreq) / (maxFreq - minFreq);
-                const fontSize = 0.8 + scale * 0.7; // 0.8x to 1.5x
-                const isSelected = state.selectedTags.has(tag);
-
+                const scale =
+                  minFreq === maxFreq ? 0.5 : (freq - minFreq) / (maxFreq - minFreq);
+                const em = 0.75 + scale * 0.65;
+                const isSelected = selectedTags.has(tag);
                 return (
                   <button
                     key={tag}
+                    type="button"
                     onClick={() => toggleTag(tag)}
-                    style={{ fontSize: `${fontSize}rem` }}
-                    className={`transition-all duration-normal ${
+                    style={{ fontSize: `${em}rem` }}
+                    className={`font-ui leading-relaxed transition-colors duration-fast ${
                       isSelected
-                        ? 'bg-accent-default text-accent-contrast'
-                        : 'text-text-secondary hover:text-text-primary'
+                        ? 'text-accent'
+                        : 'text-secondary hover:text-primary'
                     }`}
                   >
                     {tag}
+                    {freq > 1 && (
+                      <sup className="text-disabled" style={{ fontSize: '0.6em' }}>
+                        {freq}
+                      </sup>
+                    )}
                   </button>
                 );
               })}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* Dream List */}
-        <div className="space-y-4">
-          <h2 className="font-serif text-title text-text-primary">
-            夢境列表 ({state.displayedDreams.length})
-          </h2>
+        {/* 夢境列表 */}
+        <section>
+          <div className="mb-1 flex items-center justify-between">
+            <SectionLabel>
+              {searchQuery || selectedTags.size > 0 || selectedFilter !== 'all'
+                ? `找到 ${filteredDreams.length} 則`
+                : `共 ${dreams.length} 則`}
+            </SectionLabel>
+          </div>
 
-          {state.displayedDreams.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-surface p-8 text-center">
-              <p className="text-body text-text-secondary">沒有符合條件的夢境</p>
-            </div>
+          {visibleDreams.length === 0 ? (
+            <p className="py-8 text-center font-ui text-small text-tertiary">
+              沒有符合條件的夢境
+            </p>
           ) : (
-            <div className="space-y-3">
-              {state.displayedDreams.map((dream) => (
-                <Link
+            <div className="divide-y divide-border-subtle">
+              {visibleDreams.map((dream) => (
+                <DreamEntry
                   key={dream.id}
-                  to={`/dreams/${dream.id}`}
-                  className="block rounded-lg border border-border-subtle bg-surface p-4 transition-all duration-normal hover:border-border-default hover:shadow-md"
-                >
-                  <div className="mb-2 flex items-start justify-between">
-                    <div>
-                      <h3 className="font-serif text-body text-text-primary">
-                        {format(new Date(dream.dreamDate), 'yyyy 年 M 月 d 日')}
-                      </h3>
-                      {dream.ai && (
-                        <span className="text-caption text-text-tertiary">已分析</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {dream.isNightmare && (
-                        <span className="rounded-full bg-danger bg-opacity-20 px-2 py-1 text-caption text-danger">
-                          惡夢
-                        </span>
-                      )}
-                      {dream.lucidity !== null && dream.lucidity > 0 && (
-                        <span className="rounded-full bg-success bg-opacity-20 px-2 py-1 text-caption text-success">
-                          清明度 {dream.lucidity}/10
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="mb-3 line-clamp-2 text-body text-text-secondary">
-                    {dream.content}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    {dream.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-border-subtle bg-bg-primary px-2.5 py-1 text-caption text-text-secondary"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {dream.tags.length > 3 && (
-                      <span className="text-caption text-text-tertiary">
-                        +{dream.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
-
-                  {dream.mood !== null && (
-                    <div className="mt-2 text-caption text-text-tertiary">
-                      情緒：{dream.mood > 0 ? '😊' : dream.mood < 0 ? '😟' : '😐'}
-                    </div>
-                  )}
-                </Link>
+                  dream={dream}
+                  onClick={(dreamId) => navigate(`/dreams/${dreamId}`)}
+                />
               ))}
-
-              {/* Infinite scroll trigger */}
-              <div ref={endOfListRef} className="pt-4">
-                {state.hasMore && (
-                  <div className="text-center">
-                    <p className="text-caption text-text-tertiary">載入更多…</p>
-                  </div>
-                )}
-              </div>
             </div>
           )}
-        </div>
+
+          {/* 無限捲動觸發點 */}
+          <div ref={endOfListRef} className="pt-4">
+            {hasMore && (
+              <p className="text-center font-ui text-caption text-disabled">載入更多…</p>
+            )}
+          </div>
+        </section>
       </div>
     </PageLayout>
   );

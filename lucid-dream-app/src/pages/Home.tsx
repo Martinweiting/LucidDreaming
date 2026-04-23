@@ -1,191 +1,178 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { dreamRepo } from '../services/dreamRepo';
 import { backupService } from '../services/backup';
 import { Dream } from '../types/dream';
-import TagChip from '../components/TagChip';
+import PageLayout from '../components/PageLayout';
+import DreamEntry from '../components/ui/DreamEntry';
+import SectionLabel from '../components/ui/SectionLabel';
+import IconButton from '../components/ui/IconButton';
+import { useThemeContext } from '../contexts/ThemeContext';
 
 export default function Home(): JSX.Element {
   const [allDreams, setAllDreams] = useState<Dream[]>([]);
   const [incompleteDreams, setIncompleteDreams] = useState<Dream[]>([]);
   const [loading, setLoading] = useState(true);
   const [daysSinceExport, setDaysSinceExport] = useState<number | null>(null);
+  const { theme, toggleTheme } = useThemeContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function loadDreams() {
+    async function loadData(): Promise<void> {
       try {
-        const all = await dreamRepo.listAll();
-        const incomplete = await dreamRepo.listIncomplete();
+        const [all, incomplete] = await Promise.all([
+          dreamRepo.listAll(),
+          dreamRepo.listIncomplete(),
+        ]);
         setAllDreams(all);
         setIncompleteDreams(incomplete);
-      } catch (error) {
-        console.error('Failed to load dreams:', error);
+      } catch {
+        // 靜默處理，顯示空狀態
       } finally {
         setLoading(false);
       }
     }
 
-    loadDreams();
-
-    const days = backupService.getDaysSinceLastExport();
-    setDaysSinceExport(days);
+    void loadData();
+    setDaysSinceExport(backupService.getDaysSinceLastExport());
   }, []);
 
   const recentDreams = allDreams.slice(0, 30);
-  const showIncomplete = incompleteDreams.length > 0;
-  const showRecent = recentDreams.length > 0;
+  const showBackupReminder =
+    daysSinceExport !== null && daysSinceExport >= 30;
+
+  const rightActions = (
+    <>
+      <IconButton
+        icon={theme === 'dark' ? 'sun' : 'moon'}
+        label={theme === 'dark' ? '切換為白晝模式' : '切換為夜間模式'}
+        onClick={toggleTheme}
+        size="md"
+      />
+      <IconButton
+        icon="settings"
+        label="設定"
+        onClick={() => navigate('/settings')}
+        size="md"
+      />
+    </>
+  );
 
   if (loading) {
     return (
-      <main className="flex min-h-dvh items-center justify-center px-4">
-        <p className="text-text-secondary">載入中…</p>
-      </main>
+      <PageLayout showTabBar rightActions={rightActions}>
+        <div className="flex min-h-[50dvh] items-center justify-center">
+          <p className="font-ui text-small text-tertiary">載入中…</p>
+        </div>
+      </PageLayout>
     );
   }
 
-  if (!showIncomplete && !showRecent) {
+  if (allDreams.length === 0) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4 text-center">
-        <div className="space-y-3">
-          <p className="text-caption uppercase tracking-wide text-text-tertiary">還沒有夢</p>
-          <h1 className="font-serif text-heading text-text-primary">還沒有任何夢的紀錄</h1>
-          <p className="text-body text-text-secondary">打開記錄開始探索你的夜晚世界</p>
-        </div>
-        <Link
-          to="/capture"
-          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md bg-accent px-5 py-2 text-body font-medium text-bg-primary transition-colors duration-normal hover:bg-accent-hover active:scale-95"
-        >
-          + 新記錄
-        </Link>
-      </main>
-    );
-  }
-
-  const showBackupReminder = daysSinceExport !== null && daysSinceExport >= 30;
-
-  return (
-    <main className="flex min-h-dvh flex-col gap-6 px-4 py-6">
-      {showBackupReminder && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-secondary p-3">
-          <p className="text-small text-text-secondary">
-            ⏰ 建議備份你的紀錄（{daysSinceExport} 天未導出）
-          </p>
-          <Link
-            to="/settings"
-            className="flex-shrink-0 text-accent text-small font-medium hover:text-accent-hover transition-colors"
-          >
-            去設定 →
-          </Link>
-        </div>
-      )}
-
-      <header className="flex items-center justify-between">
-        <h1 className="font-serif text-title font-light text-text-primary">夢境記錄</h1>
-        <div className="flex gap-2">
-          <Link
-            to="/explore"
-            className="flex min-h-touch min-w-touch items-center justify-center rounded-md border border-border-subtle bg-bg-secondary text-text-secondary transition-colors duration-normal hover:border-border-default hover:text-text-primary"
-            title="探索"
-          >
-            🔍
-          </Link>
+      <PageLayout showTabBar rightActions={rightActions}>
+        <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-8 px-6 text-center">
+          <div className="space-y-3">
+            <p className="font-ui text-caption uppercase tracking-widest text-tertiary">
+              空白的夜晚
+            </p>
+            <h1 className="font-serif text-heading font-light text-primary">
+              還沒有夢的紀錄
+            </h1>
+            <p className="font-ui text-body text-secondary">
+              每一個夢都是值得留存的世界
+            </p>
+          </div>
           <Link
             to="/capture"
-            className="flex min-h-touch min-w-touch items-center justify-center rounded-md border border-border-subtle bg-bg-secondary text-text-secondary transition-colors duration-normal hover:border-border-default hover:text-text-primary"
-            title="新記錄"
+            className="inline-flex min-h-touch items-center justify-center rounded-md border border-border-default px-6 py-2 font-ui text-body text-primary transition-colors duration-fast hover:border-border-strong hover:bg-inset active:bg-inset"
           >
-            +
-          </Link>
-          <Link
-            to="/settings"
-            className="flex min-h-touch min-w-touch items-center justify-center rounded-md border border-border-subtle bg-bg-secondary text-text-secondary transition-colors duration-normal hover:border-border-default hover:text-text-primary"
-            title="設定"
-          >
-            ⚙
+            記下第一個夢
           </Link>
         </div>
-      </header>
+      </PageLayout>
+    );
+  }
 
-      {showIncomplete && (
-        <section className="space-y-3">
-          <h2 className="text-body font-semibold text-text-primary">未補完</h2>
-          <div className="space-y-2">
-            {incompleteDreams.slice(0, 5).map((dream) => (
-              <Link
-                key={dream.id}
-                to={`/dreams/${dream.id}`}
-                className="block rounded-lg border border-border-subtle bg-bg-secondary p-3 transition-all duration-normal hover:border-border-default hover:shadow-md"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-small text-text-secondary">{dream.dreamDate}</p>
-                    <p className="line-clamp-2 text-body text-text-primary">
-                      {dream.content.slice(0, 60)}
-                      {dream.content.length > 60 ? '…' : ''}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <TagChip tag="補完" variant="outline" />
-                  </div>
-                </div>
-              </Link>
-            ))}
+  return (
+    <PageLayout showTabBar rightActions={rightActions}>
+      <div className="px-5 pt-6 pb-2">
+        {/* 頁面標題區 */}
+        <div className="mb-8 flex items-end justify-between">
+          <div>
+            <h1 className="font-serif text-display font-light leading-none text-primary">
+              控夢
+            </h1>
+            <p className="mt-1.5 font-ui text-small text-tertiary">
+              共 {allDreams.length} 則夢境紀錄
+            </p>
           </div>
-        </section>
-      )}
+        </div>
 
-      {showRecent && (
-        <section className="space-y-3 flex-1">
-          <h2 className="text-body font-semibold text-text-primary">最近的夢</h2>
-          <div className="space-y-2">
+        {/* 備份提醒 */}
+        {showBackupReminder && (
+          <div className="mb-6 flex items-center justify-between border-l-2 border-border-default pl-3">
+            <p className="font-ui text-small text-secondary">
+              已 {daysSinceExport} 天未備份
+            </p>
+            <Link
+              to="/settings"
+              className="font-ui text-small text-accent transition-colors duration-fast hover:text-accent-hover"
+            >
+              前往備份
+            </Link>
+          </div>
+        )}
+
+        {/* 未補完的夢 */}
+        {incompleteDreams.length > 0 && (
+          <section className="mb-8">
+            <SectionLabel className="mb-3">待補完</SectionLabel>
+            <div className="divide-y divide-border-subtle">
+              {incompleteDreams.slice(0, 3).map((dream) => (
+                <DreamEntry
+                  key={dream.id}
+                  dream={dream}
+                  onClick={(id) => navigate(`/dreams/${id}`)}
+                  compact
+                />
+              ))}
+            </div>
+            {incompleteDreams.length > 3 && (
+              <p className="mt-3 font-ui text-small text-tertiary">
+                還有 {incompleteDreams.length - 3} 則待補完
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* 最近的夢 */}
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <SectionLabel>最近的夢</SectionLabel>
+          </div>
+          <div className="divide-y divide-border-subtle">
             {recentDreams.map((dream) => (
-              <Link
+              <DreamEntry
                 key={dream.id}
-                to={`/dreams/${dream.id}`}
-                className="block rounded-lg border border-border-subtle bg-bg-secondary p-3 transition-all duration-normal hover:border-border-default hover:shadow-md"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-small text-text-secondary">{dream.dreamDate}</p>
-                    {dream.lucidity !== null && dream.lucidity > 0 && (
-                      <span className="text-small" title={`清明度: ${dream.lucidity}`}>
-                        🌙
-                      </span>
-                    )}
-                  </div>
-                  <p className="line-clamp-2 text-body text-text-primary">
-                    {dream.content.slice(0, 80)}
-                    {dream.content.length > 80 ? '…' : ''}
-                  </p>
-                  {dream.tags.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
-                      {dream.tags.slice(0, 3).map((tag) => (
-                        <TagChip key={tag} tag={tag} variant="outline" />
-                      ))}
-                      {dream.tags.length > 3 && (
-                        <span className="text-caption text-text-tertiary">
-                          +{dream.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </Link>
+                dream={dream}
+                onClick={(id) => navigate(`/dreams/${id}`)}
+              />
             ))}
           </div>
-        </section>
-      )}
 
-      {showRecent && (
-        <footer className="flex justify-center py-4">
-          <Link
-            to="/explore"
-            className="text-body text-accent transition-colors duration-normal hover:text-accent-hover underline"
-          >
-            查看全部
-          </Link>
-        </footer>
-      )}
-    </main>
+          {allDreams.length > 30 && (
+            <div className="mt-6 border-t border-border-subtle pt-4 text-center">
+              <Link
+                to="/explore"
+                className="font-ui text-small text-tertiary transition-colors duration-fast hover:text-secondary"
+              >
+                查看全部 {allDreams.length} 則 →
+              </Link>
+            </div>
+          )}
+        </section>
+      </div>
+    </PageLayout>
   );
 }
