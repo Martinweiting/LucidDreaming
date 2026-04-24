@@ -163,7 +163,11 @@ function DotsScale({ max, value, onChange, variant = 'dots' }: DotsScaleProps): 
 
 // ── 主元件 ────────────────────────────────────────────
 
-export default function Capture(): JSX.Element {
+interface CaptureProps {
+  isSheet?: boolean;
+}
+
+export default function Capture({ isSheet = false }: CaptureProps): JSX.Element {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -251,8 +255,11 @@ export default function Capture(): JSX.Element {
   const readMins = Math.max(1, Math.ceil(wordCount / 300));
 
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--bg-base)', position: 'relative' }}>
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '48px 32px 96px' }}>
+    <div style={{
+      ...(isSheet ? {} : { minHeight: '100dvh', background: 'var(--bg-base)' }),
+      position: 'relative',
+    }}>
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: isSheet ? '24px 32px 120px' : '48px 32px 96px' }}>
 
         {/* 頂部 nav */}
         <header style={{
@@ -261,7 +268,7 @@ export default function Capture(): JSX.Element {
         }}>
           <button
             type="button"
-            onClick={() => navigate('/home')}
+            onClick={() => navigate(-1)}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 10,
               fontFamily: 'var(--font-ui, system-ui)', fontSize: 12,
@@ -270,7 +277,7 @@ export default function Capture(): JSX.Element {
             }}
           >
             <Icon name="arrowLeft" size={12} />
-            返回
+            {isSheet ? '關閉' : '返回'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -532,7 +539,7 @@ export default function Capture(): JSX.Element {
         onClick={() => setVoiceOn(!voiceOn)}
         title="語音輸入"
         style={{
-          position: 'fixed', bottom: 80, right: 24,
+          position: 'fixed', bottom: isSheet ? 88 : 80, right: 24,
           width: 52, height: 52, borderRadius: 999,
           background: voiceOn ? 'var(--accent-default)' : 'var(--bg-raised)',
           color: voiceOn ? 'var(--accent-contrast)' : 'var(--text-secondary)',

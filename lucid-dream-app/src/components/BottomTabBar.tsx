@@ -1,60 +1,112 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import Icon, { IconName } from './ui/Icon';
 
 interface Tab {
   to: string;
   label: string;
   icon: IconName;
+  isModal?: boolean;
 }
 
 const TABS: Tab[] = [
-  { to: '/home',       label: '首頁', icon: 'home'    },
-  { to: '/explore',    label: '探索', icon: 'compass' },
-  { to: '/dreamscape', label: '夢景', icon: 'layers'  },
-  { to: '/capture',    label: '記錄', icon: 'feather' },
+  { to: '/home',        label: '首頁', icon: 'home'      },
+  { to: '/explore',     label: '探索', icon: 'compass'   },
+  { to: '/capture',     label: '記錄', icon: 'feather',   isModal: true },
+  { to: '/incubation',  label: '孵化', icon: 'seedling'  },
+  { to: '/lab',         label: '實驗', icon: 'flask'     },
 ];
 
 export default function BottomTabBar(): JSX.Element {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  function handleTabClick(tab: Tab): void {
+    if (tab.isModal) {
+      navigate(tab.to, { state: { backgroundLocation: location } });
+    } else {
+      navigate(tab.to);
+    }
+  }
+
   return (
     <nav
       aria-label="主導覽"
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border-subtle bg-base/98 backdrop-blur-md"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        background: 'color-mix(in srgb, var(--bg-base) 72%, transparent)',
+        backdropFilter: 'blur(20px) saturate(1.15)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.15)',
+        borderTop: '1px solid color-mix(in srgb, var(--border-subtle) 55%, transparent)',
+      }}
     >
-      <ul className="flex items-stretch">
+      <ul style={{ display: 'flex', alignItems: 'stretch', margin: 0, padding: 0, listStyle: 'none' }}>
         {TABS.map((tab) => (
-          <li key={tab.to} className="flex-1">
+          <li key={tab.to} style={{ flex: 1 }}>
             <NavLink
               to={tab.to}
               aria-label={tab.label}
-              className="relative flex flex-col items-center justify-center py-3 gap-1 transition-colors duration-fast outline-none focus-visible:bg-inset"
+              onClick={(e) => {
+                if (tab.isModal) {
+                  e.preventDefault();
+                  handleTabClick(tab);
+                }
+              }}
+              style={{ display: 'block', textDecoration: 'none' }}
             >
               {({ isActive }) => (
-                <>
-                  {/* 頂部細線指示器 */}
-                  <span
-                    className={`absolute top-0 left-6 right-6 h-px transition-all duration-normal ${
-                      isActive ? 'bg-accent-default' : 'bg-transparent'
-                    }`}
-                  />
+                <button
+                  type="button"
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    padding: '10px 0 8px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Top indicator line */}
+                  <span style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '30%',
+                    right: '30%',
+                    height: 1,
+                    borderRadius: 1,
+                    background: isActive ? 'var(--accent-default)' : 'transparent',
+                    transition: 'background 180ms cubic-bezier(0.2,0,0,1)',
+                  }} />
 
                   <Icon
                     name={tab.icon}
                     size={20}
                     strokeWidth={isActive ? 1.75 : 1.25}
-                    className={`transition-colors duration-fast ${
-                      isActive ? 'text-accent' : 'text-tertiary'
-                    }`}
+                    style={{
+                      color: isActive ? 'var(--accent-default)' : 'var(--text-tertiary)',
+                      transition: 'color 150ms cubic-bezier(0.2,0,0,1)',
+                    }}
                   />
 
-                  <span
-                    className={`font-ui text-caption tracking-wide transition-colors duration-fast ${
-                      isActive ? 'text-accent' : 'text-tertiary'
-                    }`}
-                  >
+                  <span style={{
+                    fontFamily: 'var(--font-ui, system-ui)',
+                    fontSize: 10.5,
+                    letterSpacing: '0.08em',
+                    color: isActive ? 'var(--accent-default)' : 'var(--text-tertiary)',
+                    transition: 'color 150ms cubic-bezier(0.2,0,0,1)',
+                  }}>
                     {tab.label}
                   </span>
-                </>
+                </button>
               )}
             </NavLink>
           </li>

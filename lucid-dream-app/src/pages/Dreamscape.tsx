@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BottomTabBar from '../components/BottomTabBar';
 import Icon from '../components/ui/Icon';
 import { DREAM_ART, DreamArtKey } from '../components/ui/DreamArt';
 
@@ -229,7 +228,6 @@ export default function Dreamscape(): JSX.Element {
 
         </div>
       </main>
-      <BottomTabBar />
     </div>
   );
 }

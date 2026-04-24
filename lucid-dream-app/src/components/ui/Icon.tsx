@@ -7,7 +7,8 @@ export type IconName =
   | 'search' | 'plus' | 'settings' | 'home' | 'arrowLeft' | 'arrowRight'
   | 'moon' | 'clock' | 'feather' | 'book' | 'sparkle' | 'spark' | 'flask'
   | 'close' | 'tag' | 'filter' | 'check' | 'sliders' | 'mic' | 'trash'
-  | 'share' | 'edit' | 'eye' | 'link' | 'sun' | 'compass' | 'layers';
+  | 'share' | 'edit' | 'eye' | 'link' | 'sun' | 'compass' | 'layers'
+  | 'seedling' | 'wind';
 
 interface IconProps {
   name: IconName;
@@ -65,6 +66,8 @@ export default function Icon({
     sun:       <><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></>,
     compass:   <><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></>,
     layers:    <><path d="m12 2 10 6.5v7L12 22 2 15.5v-7L12 2z"/><path d="M12 22v-6.5"/><path d="M22 8.5l-10 7-10-7"/></>,
+    seedling:  <><path d="M12 22V12"/><path d="M12 12c0-4 4-7 8-7 0 4-4 7-8 7z"/><path d="M12 12c0-4-4-7-8-7 0 4 4 7 8 7z"/></>,
+    wind:      <><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></>,
   };
 
   return <svg {...common}>{paths[name]}</svg>;

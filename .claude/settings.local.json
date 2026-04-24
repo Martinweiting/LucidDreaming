@@ -38,7 +38,9 @@
       "Bash(unzip -o LucidDreaming.zip -d LucidDreaming_extracted)",
       "Bash(npx block-no-verify@1.1.2 --help)",
       "Bash(echo \"---exit:$?\")",
-      "Bash(node -e \"const fs=require\\('fs'\\); console.log\\(fs.existsSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\mcp-health-check.js'\\)\\); console.log\\(fs.readdirSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\'\\).filter\\(f=>f.includes\\('mcp'\\)\\)\\)\")"
+      "Bash(node -e \"const fs=require\\('fs'\\); console.log\\(fs.existsSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\mcp-health-check.js'\\)\\); console.log\\(fs.readdirSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\'\\).filter\\(f=>f.includes\\('mcp'\\)\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const dir='C:/Users/Martin/.claude/scripts/hooks'; console.log\\(fs.readdirSync\\(dir\\).filter\\(f=>f.includes\\('mcp'\\)\\)\\);\")",
+      "Bash(node -e \"const crypto=require\\('crypto'\\); const hash=crypto.createHash\\('sha1'\\).update\\(process.cwd\\(\\)\\).digest\\('hex'\\).slice\\(0,12\\); console.log\\('hash:', hash\\); const os=require\\('os'\\); const path=require\\('path'\\); const f=path.join\\(os.tmpdir\\(\\),'ecc-edited-'+hash+'.txt'\\); console.log\\('accum file:', f\\); const fs=require\\('fs'\\); if\\(fs.existsSync\\(f\\)\\) console.log\\('CONTENT:', fs.readFileSync\\(f,'utf8'\\)\\); else console.log\\('no accumulator file'\\);\")"
     ]
   }
 }

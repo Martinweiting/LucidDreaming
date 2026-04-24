@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { format, subDays } from 'date-fns';
 import { dreamRepo } from '../services/dreamRepo';
 import { backupService } from '../services/backup';
 import { checkAndMarkDailyOpen } from '../services/dailySession';
+import { incubationRepo } from '../services/incubationRepo';
 import { Dream } from '../types/dream';
-import BottomTabBar from '../components/BottomTabBar';
+import { type IncubationIntent } from '../types/incubation';
 import Icon from '../components/ui/Icon';
 import IconButton from '../components/ui/IconButton';
 import HeroTitle from '../components/ui/HeroTitle';
@@ -42,26 +44,31 @@ function buildPatternLine(dreams: Dream[]): string {
 export default function Home(): JSX.Element {
   const [allDreams, setAllDreams] = useState<Dream[]>([]);
   const [incompleteDreams, setIncompleteDreams] = useState<Dream[]>([]);
+  const [pendingReview, setPendingReview] = useState<IncubationIntent | null>(null);
   const [loading, setLoading] = useState(true);
   const [daysSinceExport, setDaysSinceExport] = useState<number | null>(null);
   const { theme, toggleTheme } = useThemeContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const session = checkAndMarkDailyOpen();
     if (session === 'first') {
-      navigate('/capture?morning=1', { replace: true });
+      navigate('/capture?morning=1', { state: { backgroundLocation: location }, replace: true });
       return;
     }
 
     async function loadData(): Promise<void> {
       try {
-        const [all, incomplete] = await Promise.all([
+        const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+        const [all, incomplete, lastNight] = await Promise.all([
           dreamRepo.listAll(),
           dreamRepo.listIncomplete(),
+          incubationRepo.getByDate(yesterday),
         ]);
         setAllDreams(all);
         setIncompleteDreams(incomplete);
+        if (lastNight && !lastNight.reviewed) setPendingReview(lastNight);
       } catch {
         // 靜默處理，顯示空狀態
       } finally {
@@ -84,7 +91,6 @@ export default function Home(): JSX.Element {
             載入中
           </p>
         </div>
-        <BottomTabBar />
       </div>
     );
   }
@@ -157,6 +163,7 @@ export default function Home(): JSX.Element {
           {/* 「記下今晚的夢」邀請條 */}
           <Link
             to="/capture"
+            state={{ backgroundLocation: location }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -282,7 +289,6 @@ export default function Home(): JSX.Element {
 
         </div>
       </main>
-      <BottomTabBar />
     </div>
   );
 }

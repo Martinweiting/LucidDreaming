@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
 import { dreamRepo } from '../services/dreamRepo';
-import BottomTabBar from '../components/BottomTabBar';
 import DreamEntry from '../components/ui/DreamEntry';
 import FilterPill from '../components/ui/FilterPill';
 import SectionLabel from '../components/ui/SectionLabel';
@@ -428,7 +427,6 @@ export default function Explore(): JSX.Element {
 
         </div>
       </main>
-      <BottomTabBar />
     </div>
   );
 }
