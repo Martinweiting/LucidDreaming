@@ -17,24 +17,34 @@ export default function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`relative inline-flex items-center gap-2 px-4 py-2 font-ui text-small tracking-wide transition-colors duration-fast outline-none focus-visible:ring-1 focus-visible:ring-border-focus ${
-        active ? 'text-primary' : 'text-tertiary hover:text-secondary'
-      } ${className}`}
+      className={className}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: '6px 2px',
+        marginRight: 18,
+        fontFamily: 'var(--font-ui, system-ui)',
+        fontSize: 13.5,
+        letterSpacing: '0.02em',
+        color: active ? 'var(--text-primary)' : 'var(--text-tertiary)',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'color 180ms cubic-bezier(0.2,0,0,1)',
+      }}
     >
-      <span>{label}</span>
-
+      {label}
       {count !== undefined && count > 0 && (
-        <span className="font-ui text-caption text-disabled tabular-nums">
-          {count}
-        </span>
+        <span style={{ marginLeft: 4, fontSize: 11, color: 'var(--text-disabled)' }}>{count}</span>
       )}
-
-      {/* 底線指示器 */}
-      <span
-        className={`absolute bottom-0 left-3 right-3 h-px transition-all duration-normal ${
-          active ? 'bg-accent-default' : 'bg-transparent'
-        }`}
-      />
+      <span style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: -2,
+        height: 1,
+        background: active ? 'var(--accent-default)' : 'transparent',
+        transition: 'background 180ms cubic-bezier(0.2,0,0,1)',
+      }} />
     </button>
   );
 }

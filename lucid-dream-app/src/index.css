@@ -3,35 +3,35 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════
-   Light theme — 絹紙 (Fine Paper)
+   Light theme — 燕麥紙本
    ═══════════════════════════════════════════════════════ */
 :root {
   /* Background */
-  --bg-base:    #F4EFE6;
-  --bg-raised:  #FAF6EE;
-  --bg-surface: #EDE7DA;
-  --bg-overlay: #DDD6C8;
-  --bg-inset:   #D5CDBE;
+  --bg-base:    #EFE9DE;
+  --bg-raised:  #F4EFE5;
+  --bg-surface: #E7DFD0;
+  --bg-overlay: #D8CEBB;
+  --bg-inset:   #DCD2C0;
 
   /* Border */
-  --border-subtle:  #DDD5C5;
-  --border-default: #C8BFAA;
-  --border-strong:  #A89880;
-  --border-focus:   #7A5C38;
+  --border-subtle:  #D8CEBB;
+  --border-default: #C4B69E;
+  --border-strong:  #A89780;
+  --border-focus:   #8B6F52;
 
   /* Text */
-  --text-primary:   #28221A;
-  --text-secondary: #5E5242;
-  --text-tertiary:  #8A7A66;
-  --text-disabled:  #B8AC98;
-  --text-inverse:   #FAF6EE;
+  --text-primary:   #2F2A24;
+  --text-secondary: #6B6258;
+  --text-tertiary:  #8F8678;
+  --text-disabled:  #B8AE9C;
+  --text-inverse:   #F4EFE5;
 
-  /* Accent — 深摩卡 (Deep Mocha) */
-  --accent-subtle:   #EDE5D8;
-  --accent-muted:    #C4A87A;
-  --accent-default:  #7A5C38;
-  --accent-hover:    #634A2C;
-  --accent-contrast: #FAF6EE;
+  /* Accent — 摩卡 */
+  --accent-subtle:   #E8DCC8;
+  --accent-muted:    #C4A887;
+  --accent-default:  #8B6F52;
+  --accent-hover:    #75583D;
+  --accent-contrast: #F4EFE5;
 
   /* Semantic */
   --semantic-success:   #5C6E4F;
@@ -40,6 +40,10 @@
   --semantic-info:      #7A8494;
   --semantic-nightmare: #6B4A45;
   --semantic-lucid:     #3F4A3C;
+
+  /* Motion */
+  --d-fast: 120ms; --d-normal: 180ms; --d-slow: 250ms;
+  --e-standard: cubic-bezier(0.2, 0, 0, 1);
 
   /* Alpha variants */
   --accent-alpha-08: color-mix(in srgb, var(--accent-default) 8%, transparent);
@@ -52,35 +56,35 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   Dark theme — 深漆 (Deep Lacquer)
+   Dark theme — 深可可煙燻
    ═══════════════════════════════════════════════════════ */
 [data-theme='dark'] {
   /* Background */
-  --bg-base:    #0E0C09;
-  --bg-raised:  #161210;
-  --bg-surface: #1D1912;
-  --bg-overlay: #0A0804;
-  --bg-inset:   #080604;
+  --bg-base:    #1A1410;
+  --bg-raised:  #221A14;
+  --bg-surface: #2A211A;
+  --bg-overlay: #14100C;
+  --bg-inset:   #100C09;
 
   /* Border */
-  --border-subtle:  #201B13;
-  --border-default: #2E2518;
-  --border-strong:  #463A26;
-  --border-focus:   #9A7A52;
+  --border-subtle:  #2E251D;
+  --border-default: #3C3126;
+  --border-strong:  #55463A;
+  --border-focus:   #8B6F52;
 
   /* Text */
-  --text-primary:   #EDE5D3;
-  --text-secondary: #A89068;
-  --text-tertiary:  #6B5A42;
-  --text-disabled:  #3A3020;
-  --text-inverse:   #0E0C09;
+  --text-primary:   #E8DFCF;
+  --text-secondary: #A89A84;
+  --text-tertiary:  #786B58;
+  --text-disabled:  #4A4137;
+  --text-inverse:   #1A1410;
 
-  /* Accent — 金箔 (Gold Leaf) */
-  --accent-subtle:   #1E1608;
-  --accent-muted:    #3C2C10;
-  --accent-default:  #C8A552;
-  --accent-hover:    #DAB860;
-  --accent-contrast: #0E0C09;
+  /* Accent — 奶茶 */
+  --accent-subtle:   #2A1F15;
+  --accent-muted:    #5E4A32;
+  --accent-default:  #B89A7A;
+  --accent-hover:    #CBAC8A;
+  --accent-contrast: #1A1410;
 
   /* Semantic */
   --semantic-success:   #7A8F6E;
@@ -180,15 +184,15 @@
   opacity: 0.8;
 }
 
-/* Dark: 漆面深光效果 */
+/* Dark: 星塵效果 */
 [data-theme='dark'] .ambient-layer {
   background-image:
-    radial-gradient(1px 1px at 18% 12%, rgba(200, 165, 82, 0.06) 50%, transparent 51%),
-    radial-gradient(1px 1px at 68% 28%, rgba(237, 229, 211, 0.04) 50%, transparent 51%),
-    radial-gradient(1.2px 1.2px at 42% 71%, rgba(200, 165, 82, 0.05) 50%, transparent 51%),
-    radial-gradient(1px 1px at 83% 88%, rgba(237, 229, 211, 0.03) 50%, transparent 51%),
-    radial-gradient(1px 1px at 28% 52%, rgba(237, 229, 211, 0.03) 50%, transparent 51%),
-    radial-gradient(1px 1px at 56% 14%, rgba(200, 165, 82, 0.04) 50%, transparent 51%);
+    radial-gradient(1.2px 1.2px at 18% 12%, rgba(232, 223, 207, 0.18) 50%, transparent 51%),
+    radial-gradient(1px 1px at 68% 28%, rgba(232, 223, 207, 0.12) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 42% 71%, rgba(184, 154, 122, 0.15) 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 88%, rgba(232, 223, 207, 0.10) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 52%, rgba(232, 223, 207, 0.08) 50%, transparent 51%),
+    radial-gradient(1px 1px at 56% 14%, rgba(184, 154, 122, 0.14) 50%, transparent 51%);
   background-size: 400px 400px, 340px 340px, 380px 380px, 420px 420px, 360px 360px, 300px 300px;
 }
 

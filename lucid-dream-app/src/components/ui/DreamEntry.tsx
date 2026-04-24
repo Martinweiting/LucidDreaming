@@ -1,5 +1,6 @@
 import { format, parseISO } from 'date-fns';
 import { Dream } from '../../types/dream';
+import Icon from './Icon';
 
 interface DreamEntryProps {
   dream: Dream;
@@ -9,6 +10,8 @@ interface DreamEntryProps {
   className?: string;
 }
 
+const WEEKDAYS_EN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
 export default function DreamEntry({
   dream,
   onClick,
@@ -17,82 +20,117 @@ export default function DreamEntry({
   className = '',
 }: DreamEntryProps): JSX.Element {
   const date = parseISO(dream.dreamDate);
-  const day = format(date, 'd');
-  const month = `${format(date, 'M')}月`;
-  const snippet = dream.ai?.summary ?? dream.content.slice(0, 120);
-  const hasLucid = dream.lucidity !== null && dream.lucidity !== undefined && dream.lucidity > 0;
-  const isNightmare = dream.isNightmare;
+  const dateDisplay = format(date, 'M月d日');
+  const weekday = WEEKDAYS_EN[date.getDay()];
+  const isLucid = dream.lucidity !== null && dream.lucidity !== undefined && dream.lucidity > 0;
 
   const handleClick = (): void => onClick?.(dream.id);
-
   const handleKeyDown = (e: React.KeyboardEvent): void => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick?.(dream.id);
-    }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(dream.id); }
   };
 
   return (
     <article
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      role="button"
-      tabIndex={0}
-      aria-label={`夢境記錄 ${month}${day}日`}
-      className={`group flex items-start gap-6 border-b border-border-subtle ${
-        compact ? 'py-4' : 'py-5'
-      } cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-border-focus ${className}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={`夢境記錄 ${dateDisplay}`}
+      className={`group outline-none ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      style={{
+        padding: '20px 0',
+        borderBottom: '1px solid var(--border-subtle)',
+        transition: 'all 180ms cubic-bezier(0.2,0,0,1)',
+      }}
     >
-      {/* 日期欄：大數字 + 月份 */}
-      <div className="w-10 flex-shrink-0 text-right pt-1">
-        <span className="block font-serif text-heading font-light text-disabled tabular-nums leading-none">
-          {day}
-        </span>
-        <span className="block font-ui text-caption text-disabled mt-1 tracking-wide">
-          {month}
-        </span>
+      {/* 日期列 */}
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+          <time
+            style={{
+              fontFamily: 'var(--font-serif, serif)',
+              fontSize: 14,
+              letterSpacing: '0.04em',
+              color: 'var(--text-secondary)',
+              transition: 'color 180ms cubic-bezier(0.2,0,0,1)',
+            }}
+            className="group-hover:[color:var(--accent-default)]"
+          >
+            {dateDisplay}
+          </time>
+          <span style={{ fontSize: 11.5, color: 'var(--text-tertiary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            {weekday}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {isLucid && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--semantic-lucid)', fontSize: 11.5 }}>
+              <Icon name="moon" size={12} />
+              清明 {dream.lucidity}
+            </span>
+          )}
+          {dream.isNightmare && (
+            <span style={{ color: 'var(--semantic-nightmare)', fontSize: 11.5 }}>惡夢</span>
+          )}
+          {dream.ai !== null && !compact && (
+            <span style={{ color: 'var(--text-tertiary)', fontSize: 11.5 }}>已分析</span>
+          )}
+        </div>
       </div>
 
-      {/* 內容欄 */}
-      <div className="flex-1 min-w-0">
-        <p
-          className={`font-serif text-body text-secondary leading-relaxed transition-colors duration-fast group-hover:text-primary ${
-            compact ? 'line-clamp-2' : 'line-clamp-3'
-          }`}
-        >
-          {snippet}
-        </p>
+      {/* 內文 */}
+      <p
+        style={{
+          fontFamily: 'var(--font-serif, serif)',
+          fontSize: compact ? 14.5 : 16,
+          lineHeight: 1.75,
+          color: 'var(--text-primary)',
+          margin: 0,
+          marginBottom: showTags && dream.tags.length > 0 ? 12 : 0,
+        }}
+        className={compact ? 'line-clamp-2' : 'line-clamp-3'}
+      >
+        {dream.content}
+      </p>
 
-        {/* 標記與標籤 */}
-        {(showTags && dream.tags.length > 0) || hasLucid || isNightmare ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {hasLucid && (
-              <span className="font-ui text-caption text-lucid tracking-wide">
-                清明
-              </span>
-            )}
-            {isNightmare && (
-              <span className="font-ui text-caption text-nightmare tracking-wide">
-                夢魘
-              </span>
-            )}
-            {showTags &&
-              dream.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="font-ui text-caption text-disabled tracking-wide"
-                >
-                  #{tag}
-                </span>
-              ))}
-            {showTags && dream.tags.length > 3 && (
-              <span className="font-ui text-caption text-disabled">
-                +{dream.tags.length - 3}
-              </span>
-            )}
-          </div>
-        ) : null}
-      </div>
+      {/* 標籤列 */}
+      {showTags && dream.tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          {dream.tags.slice(0, 4).map((t) => (
+            <span
+              key={t}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                borderRadius: 999,
+                fontSize: 11.5,
+                fontFamily: 'var(--font-ui, system-ui)',
+                letterSpacing: '0.02em',
+                background: 'color-mix(in srgb, var(--accent-default) 10%, transparent)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {t}
+            </span>
+          ))}
+          {dream.tags.length > 4 && (
+            <span style={{ fontSize: 11.5, color: 'var(--text-tertiary)' }}>+{dream.tags.length - 4}</span>
+          )}
+          {dream.mood !== null && dream.mood !== undefined && (
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: 11.5,
+              color: 'var(--text-tertiary)',
+              fontFamily: 'var(--font-ui, system-ui)',
+              letterSpacing: '0.04em',
+            }}>
+              情緒 {dream.mood > 0 ? `+${dream.mood}` : dream.mood}
+            </span>
+          )}
+        </div>
+      )}
     </article>
   );
 }

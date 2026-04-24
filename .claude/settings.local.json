@@ -30,7 +30,15 @@
       "Bash(find ~/.claude/plugins/marketplaces -type d -name \"skills\" -exec rm -rf {} +)",
       "Bash(rm -rf ~/.claude/plugins/cache)",
       "Bash(find ~/.claude/plugins/marketplaces -maxdepth 2 -type d ! -name \"marketplaces\" ! -name \"plugins\" -exec rm -rf {} +)",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "Bash(node \"C:/Users/Martin/.claude/scripts/hooks/session-start-bootstrap.js\" *)",
+      "Read(//c/Users/Martin/Downloads/**)",
+      "Bash(ls -la LucidDreaming.zip)",
+      "Bash(file LucidDreaming.zip)",
+      "Bash(unzip -o LucidDreaming.zip -d LucidDreaming_extracted)",
+      "Bash(npx block-no-verify@1.1.2 --help)",
+      "Bash(echo \"---exit:$?\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); console.log\\(fs.existsSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\mcp-health-check.js'\\)\\); console.log\\(fs.readdirSync\\('C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\Martin\\\\\\\\\\\\\\\\.claude\\\\\\\\\\\\\\\\scripts\\\\\\\\\\\\\\\\hooks\\\\\\\\\\\\\\\\'\\).filter\\(f=>f.includes\\('mcp'\\)\\)\\)\")"
     ]
   }
 }

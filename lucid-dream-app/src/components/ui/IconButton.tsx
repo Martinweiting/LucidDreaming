@@ -1,13 +1,13 @@
+import { useState } from 'react';
 import Icon, { IconName } from './Icon';
 
-type IconButtonVariant = 'ghost' | 'subtle' | 'solid';
 type IconButtonSize = 'sm' | 'md' | 'lg';
 
 interface IconButtonProps {
   icon: IconName;
   label: string;
   onClick?: () => void;
-  variant?: IconButtonVariant;
+  variant?: 'ghost' | 'subtle' | 'solid';
   size?: IconButtonSize;
   active?: boolean;
   disabled?: boolean;
@@ -19,32 +19,20 @@ export default function IconButton({
   icon,
   label,
   onClick,
-  variant = 'ghost',
   size = 'md',
   active = false,
   disabled = false,
   className = '',
   type = 'button',
 }: IconButtonProps): JSX.Element {
-  const sizeMap: Record<IconButtonSize, { box: string; icon: number }> = {
-    sm: { box: 'h-8 w-8', icon: 16 },
-    md: { box: 'h-10 w-10', icon: 20 },
-    lg: { box: 'h-11 w-11', icon: 22 },
-  };
+  const [hover, setHover] = useState(false);
 
-  const { box, icon: iconSize } = sizeMap[size];
-
-  const variantClass: Record<IconButtonVariant, string> = {
-    ghost: active
-      ? 'text-accent bg-accent-subtle'
-      : 'text-secondary hover:text-primary hover:bg-inset active:bg-inset',
-    subtle: active
-      ? 'text-accent bg-accent-muted'
-      : 'text-secondary bg-inset hover:text-primary hover:bg-raised active:bg-raised',
-    solid: active
-      ? 'text-bg-base bg-accent-default'
-      : 'text-secondary bg-raised border border-border-subtle hover:text-primary hover:bg-surface active:bg-surface',
+  const sizeMap: Record<IconButtonSize, { dim: number; icon: number }> = {
+    sm: { dim: 32, icon: 16 },
+    md: { dim: 40, icon: 18 },
+    lg: { dim: 44, icon: 22 },
   };
+  const { dim, icon: iconSize } = sizeMap[size];
 
   return (
     <button
@@ -53,7 +41,26 @@ export default function IconButton({
       disabled={disabled}
       aria-label={label}
       aria-pressed={active ? true : undefined}
-      className={`inline-flex items-center justify-center rounded-md transition-colors duration-fast ${box} ${variantClass[variant]} ${disabled ? 'pointer-events-none opacity-40' : ''} ${className}`}
+      title={label}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className={className}
+      style={{
+        width: dim,
+        height: dim,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: active
+          ? 'color-mix(in srgb, var(--accent-default) 15%, transparent)'
+          : hover ? 'var(--bg-raised)' : 'transparent',
+        color: active ? 'var(--accent-default)' : 'var(--text-secondary)',
+        border: 'none',
+        borderRadius: 6,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.4 : 1,
+        transition: 'all 180ms cubic-bezier(0.2,0,0,1)',
+      }}
     >
       <Icon name={icon} size={iconSize} />
     </button>
